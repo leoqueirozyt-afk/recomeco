@@ -7,6 +7,23 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =============================================
+-- TABELA USERS (Administradores)
+-- =============================================
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    full_name TEXT,
+    role TEXT DEFAULT 'admin',
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_active ON users(active);
+
+-- =============================================
 -- TABELA MENTORS (Responsáveis/Líderes)
 -- =============================================
 CREATE TABLE IF NOT EXISTS mentors (
@@ -108,6 +125,12 @@ CREATE TRIGGER update_mentors_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- =============================================
 -- VIEW PARA BUSCAR PESSOAS COM RESPONSÁVEIS
 -- =============================================
@@ -147,3 +170,7 @@ CREATE POLICY "Allow all on people" ON people FOR ALL USING (true);
 CREATE POLICY "Allow all on mentors" ON mentors FOR ALL USING (true);
 CREATE POLICY "Allow all on people_mentors" ON people_mentors FOR ALL USING (true);
 CREATE POLICY "Allow all on backup_logs" ON backup_logs FOR ALL USING (true);
+
+-- Users table - apenas leitura para autenticação
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow auth on users" ON users FOR SELECT USING (true);

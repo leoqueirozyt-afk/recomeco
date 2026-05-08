@@ -40,8 +40,6 @@ const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 // Auth config
 const JWT_SECRET = process.env.JWT_SECRET || 'recomeco-secret-key-2024';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@recomeco.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'recomeco123';
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -61,19 +59,117 @@ function authenticateToken(req, res, next) {
 }
 
 // Auth routes
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
 
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    const token = jwt.sign({ email, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
-    res.json({ token, user: { email: ADMIN_EMAIL, role: 'admin' } });
-  } else {
-    res.status(401).json({ error: 'Credenciais inválidas' });
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('active', true)
+      .single();
+
+    if (error || !data) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    if (data.password_hash === password) {
+      const token = jwt.sign({ 
+        email: data.email, 
+        role: data.role,
+        userId: data.id 
+      }, JWT_SECRET, { expiresIn: '24h' });
+      res.json({ 
+        token, 
+        user: { 
+          email: data.email, 
+          role: data.role,
+          fullName: data.full_name 
+        } 
+      });
+    } else {
+      res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
+});
+
+// Users routes (admin only)
+app.get('/api/users', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, full_name, role, active, created_at, updated_at')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/users', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+  try {
+    const { email, password, full_name, role } = req.body;
+    const { data, error } = await supabase
+      .from('users')
+      .insert({ email, password_hash: password, full_name, role: role || 'admin' })
+      .select()
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/users/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+  try {
+    const { email, password, full_name, role, active } = req.body;
+    const updateData = { email, full_name, role, active };
+    if (password) updateData.password_hash = password;
+    const { data, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', req.params.id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/users/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+  try {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Helper functions
