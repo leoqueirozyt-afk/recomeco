@@ -150,15 +150,6 @@ app.post('/api/auth/login', requireSupabase, async (req, res) => {
     res.status(500).json({ ok: false, error: 'Erro interno ao fazer login.', details: error.message });
   }
 });
-    } else {
-      console.log('Senha incorreta para:', email);
-      res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
-    }
-  } catch (error) {
-    console.error('Erro em /api/auth/login:', error);
-    res.status(500).json({ ok: false, error: 'Erro interno ao fazer login.', details: error.message });
-  }
-});
 
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
