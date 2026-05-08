@@ -1,59 +1,32 @@
-import { supabase } from './supabaseClient';
-import * as XLSX from 'xlsx';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
 
 export const backupService = {
   async getLastBackup() {
-    const { data, error } = await supabase
-      .from('backup_logs')
-      .select('*')
-      .order('exported_at', { ascending: false })
-      .limit(1)
-      .single();
-    
-    if (error) return null;
-    return data;
+    const res = await fetch(`${API_BASE}/api/backups/status`);
+    const data = await res.json();
+    return data.lastBackup || null;
   },
 
   async checkPendingBackup(month, year) {
-    const { data, error } = await supabase
-      .from('backup_logs')
-      .select('id')
-      .eq('backup_month', month)
-      .eq('backup_year', year)
-      .maybeSingle();
-    
-    return !data;
+    const res = await fetch(`${API_BASE}/api/backups/status`);
+    const data = await res.json();
+    return data.pendingAlert || false;
   },
 
   async registerBackup(month, year, totalPeople, notes = '', exportedBy = '') {
-    const { data, error } = await supabase
-      .from('backup_logs')
-      .insert({
-        backup_month: month,
-        backup_year: year,
-        total_people: totalPeople,
-        notes: notes,
-        exported_by: exportedBy
-      })
-      .select()
-      .single();
-    
-    if (error) throw error;
+    const res = await fetch(`${API_BASE}/api/backups/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ backup_month: month, backup_year: year, total_people: totalPeople, notes })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao registrar');
     return data;
   },
 
-  async getPeopleWithMentors() {
-    const { data: people, error } = await supabase
-      .from('v_people_with_mentors')
-      .select('*')
-      .order('decision_date', { ascending: false });
-
-    if (error) throw error;
-    return people || [];
-  },
-
   async exportCSV() {
-    const people = await this.getPeopleWithMentors();
+    const res = await fetch(`${API_BASE}/api/people`);
+    const people = await res.json();
 
     const headers = [
       'Data da decisão',
@@ -74,21 +47,21 @@ export const backupService = {
     ];
 
     const rows = people.map(person => [
-      person.decision_date || '',
-      person.decision_month || '',
-      person.full_name || '',
-      person.birth_date || '',
-      person.full_address || '',
+      person.decisionDate || '',
+      person.decisionMonth || '',
+      person.fullName || '',
+      person.birthDate || '',
+      person.fullAddress || '',
       person.contact || '',
       person.gender || '',
-      person.baptized ? 'Sim' : 'Não',
-      person.first_decision || '',
-      person.disciple_status || '',
-      person.final_decision || '',
+      person.baptized || '',
+      person.firstDecision || '',
+      person.discipleStatus || '',
+      person.finalDecision || '',
       person.mentors || '',
       person.notes || '',
-      person.created_at || '',
-      person.updated_at || ''
+      person.createdAt || '',
+      person.updatedAt || ''
     ].map(val => String(val).replace(/"/g, '""')));
 
     const csvContent = [
@@ -112,45 +85,47 @@ export const backupService = {
   },
 
   async exportExcel() {
-    const people = await this.getPeopleWithMentors();
+    const res = await fetch(`${API_BASE}/api/people`);
+    const people = await res.json();
 
     const data = people.map(person => ({
-      'Data da decisão': person.decision_date || '',
-      'Mês da decisão': person.decision_month || '',
-      'Nome completo': person.full_name || '',
-      'Data de nascimento': person.birth_date || '',
-      'Endereço completo': person.full_address || '',
+      'Data da decisão': person.decisionDate || '',
+      'Mês da decisão': person.decisionMonth || '',
+      'Nome completo': person.fullName || '',
+      'Data de nascimento': person.birthDate || '',
+      'Endereço completo': person.fullAddress || '',
       'Contato': person.contact || '',
       'Sexo': person.gender || '',
-      'Batizado': person.baptized ? 'Sim' : 'Não',
-      'Primeira decisão': person.first_decision || '',
-      'Status': person.disciple_status || '',
-      'Decisão final': person.final_decision || '',
+      'Batizado': person.baptized || '',
+      'Primeira decisão': person.firstDecision || '',
+      'Status': person.discipleStatus || '',
+      'Decisão final': person.finalDecision || '',
       'Responsáveis': person.mentors || '',
       'Observações': person.notes || '',
-      'Data de criaç��o': person.created_at || '',
-      'Data de atualização': person.updated_at || ''
+      'Data de criação': person.createdAt || '',
+      'Data de atualização': person.updatedAt || ''
     }));
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Backup');
-    
-    const colWidths = [
-      { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
-      { wch: 30 }, { wch: 15 }, { wch: 10 }, { wch: 10 },
-      { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
-      { wch: 25 }, { wch: 20 }, { wch: 20 }
-    ];
-    ws['!cols'] = colWidths;
-
-    return wb;
+    return { data, filename: 'Backup' };
   },
 
   downloadExcel(month, year) {
-    const filename = `recomeco-backup-${String(month).padStart(2, '0')}-${year}.xlsx`;
-    this.exportExcel().then(wb => {
-      XLSX.writeFile(wb, filename);
+    import('xlsx').then(XLSX => {
+      this.exportExcel().then(({ data, filename }) => {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Backup');
+        
+        const colWidths = [
+          { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
+          { wch: 30 }, { wch: 15 }, { wch: 10 }, { wch: 10 },
+          { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
+          { wch: 25 }, { wch: 20 }, { wch: 20 }
+        ];
+        ws['!cols'] = colWidths;
+
+        XLSX.writeFile(wb, `recomeco-backup-${String(month).padStart(2, '0')}-${year}.xlsx`);
+      });
     });
   }
 };

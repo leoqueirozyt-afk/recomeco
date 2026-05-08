@@ -4,7 +4,6 @@ node_modules/
 # banco de dados
 *.sqlite
 *.db
-server/src/database.sqlite
 
 # ambiente
 .env
@@ -32,9 +31,5 @@ backups/
 # Supabase
 supabase/
 
-# Server node_modules
-server/node_modules/
-client/node_modules/
-
-# Imagens/Downloads temporários
-Downloads/
+# Server local (usar api/ para Vercel)
+server/

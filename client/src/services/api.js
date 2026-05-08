@@ -1,7 +1,5 @@
-// API principal usando Supabase
-import { supabaseApi } from './supabaseApi';
-
-const API_BASE = '/api';
+// API usando backend Vercel
+const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
 
 let authToken = localStorage.getItem('recomeco_token');
 
@@ -59,8 +57,29 @@ export const api = {
 };
 
 export const auth = {
-  logout() {
-    localStorage.removeItem('recomeco_token');
+  async login(email, password) {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Credenciais inválidas');
+      }
+      
+      authToken = data.token;
+      localStorage.setItem('recomeco_token', data.token);
+      return data;
+    } catch (err) {
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        throw new Error('Servidor offline. Tente novamente mais tarde.');
+      }
+      throw err;
+    }
   },
 
   logout() {
@@ -75,7 +94,7 @@ export const auth = {
   async verify() {
     if (!authToken) return false;
     try {
-      const res = await fetch(`${API_BASE}/auth/verify`, {
+      const res = await fetch(`${API_BASE}/api/auth/verify`, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       return res.ok;
@@ -85,16 +104,15 @@ export const auth = {
   }
 };
 
-// Exporta API do Supabase
-export const getDashboard = () => supabaseApi.getDashboard();
-export const getPeople = () => supabaseApi.getPeople();
-export const getPerson = (id) => supabaseApi.getPerson(id);
-export const createPerson = (data) => supabaseApi.createPerson(data);
-export const updatePerson = (id, data) => supabaseApi.updatePerson(id, data);
-export const deletePerson = (id) => supabaseApi.deletePerson(id);
+export const getDashboard = () => api.get('/api/dashboard/summary');
+export const getPeople = () => api.get('/api/people');
+export const getPerson = (id) => api.get(`/api/people/${id}`);
+export const createPerson = (data) => api.post('/api/people', data);
+export const updatePerson = (id, data) => api.put(`/api/people/${id}`, data);
+export const deletePerson = (id) => api.delete(`/api/people/${id}`);
 
-export const getMentors = () => supabaseApi.getMentors();
-export const getMentor = (id) => supabaseApi.getMentor(id);
-export const createMentor = (data) => supabaseApi.createMentor(data);
-export const updateMentor = (id, data) => supabaseApi.updateMentor(id, data);
-export const deleteMentor = (id) => supabaseApi.deleteMentor(id);
+export const getMentors = () => api.get('/api/mentors');
+export const getMentor = (id) => api.get(`/api/mentors/${id}`);
+export const createMentor = (data) => api.post('/api/mentors', data);
+export const updateMentor = (id, data) => api.put(`/api/mentors/${id}`, data);
+export const deleteMentor = (id) => api.delete(`/api/mentors/${id}`);
