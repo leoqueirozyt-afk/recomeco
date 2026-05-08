@@ -70,25 +70,48 @@ app.get('/api/auth/health', (req, res) => {
   res.json({ ok: true, message: 'Auth route funcionando', supabaseConfigured });
 });
 
+app.get('/api/auth/user-check/:email', requireSupabase, async (req, res) => {
+  const email = req.params.email;
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, full_name, role, active')
+      .eq('email', email)
+      .single();
+    
+    if (error || !data) {
+      return res.json({ ok: true, exists: false });
+    }
+    res.json({ ok: true, exists: true, user: data });
+  } catch (err) {
+    res.json({ ok: false, error: err.message });
+  }
+});
+
 app.post('/api/auth/login', requireSupabase, async (req, res) => {
   const { email, password } = req.body;
   
-  console.log('Login recebido para:', email);
+  console.log('Login recebido para:', email, { hasPassword: Boolean(password) });
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+    return res.status(400).json({ ok: false, error: 'E-mail e senha são obrigatórios.' });
   }
 
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, full_name, role, active, password_hash')
       .eq('email', email)
-      .eq('active', true)
       .single();
 
+    console.log('Consulta users para:', email, { found: Boolean(data), error: error?.message });
+
     if (error || !data) {
-      return res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
+      return res.status(401).json({ ok: false, error: 'Credenciais inválidas', debug: error?.message });
+    }
+
+    if (!data.active) {
+      return res.status(401).json({ ok: false, error: 'Usuário inativo' });
     }
 
     if (data.password_hash === password) {
@@ -107,6 +130,7 @@ app.post('/api/auth/login', requireSupabase, async (req, res) => {
         } 
       });
     } else {
+      console.log('Senha incorreta para:', email);
       res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
     }
   } catch (error) {
