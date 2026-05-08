@@ -67,8 +67,12 @@ function App() {
   };
 
   const handleLogout = () => {
+    const token = localStorage.getItem('recomeco_token');
     auth.logout();
-    window.location.href = '/login';
+    if (token) {
+      localStorage.removeItem('recomeco_token');
+    }
+    window.location.replace('/');
   };
 
   const toggleSidebar = () => {
