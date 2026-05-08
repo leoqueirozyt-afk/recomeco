@@ -49,6 +49,7 @@ function ProtectedRoute({ children }) {
 function App() {
   const [isAuth, setIsAuth] = useState(null);
   const [backupPending, setBackupPending] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     setIsAuth(auth.isAuthenticated());
@@ -71,6 +72,10 @@ function App() {
     window.location.href = '/login';
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   if (isAuth === null) {
     return null;
   }
@@ -84,38 +89,41 @@ function App() {
         <Route path="/*" element={
           <ProtectedRoute>
             <div className="app-container">
-              <aside className="sidebar">
-                <div className="logo">
+              <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
                   <img src="/logo.png" alt="Recomeço" className="logo-img" />
+                  <button className="menu-toggle" onClick={toggleSidebar} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>
+                    ✕
+                  </button>
                 </div>
                 <nav>
                   <ul className="nav-menu">
                     <li className="nav-item">
-                      <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                      <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                         <span className="nav-icon">👑</span>
                         Líderes
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
+                      <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end onClick={() => setSidebarOpen(false)}>
                         <span className="nav-icon">📊</span>
                         Dashboard
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/people" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                      <NavLink to="/people" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                         <span className="nav-icon">👥</span>
                         Pessoas
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/people/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                      <NavLink to="/people/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setSidebarOpen(false)}>
                         <span className="nav-icon">➕</span>
                         Novo
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/backup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${backupPending ? 'backup-pending' : ''}`}>
+                      <NavLink to="/backup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${backupPending ? 'backup-pending' : ''}`} onClick={() => setSidebarOpen(false)}>
                         <span className="nav-icon">{backupPending ? '🔔' : '💾'}</span>
                         Backup {backupPending && '⚠️'}
                       </NavLink>
@@ -130,6 +138,9 @@ function App() {
                 </nav>
               </aside>
               <main className="main-content">
+                <button className="menu-toggle" onClick={toggleSidebar} style={{ display: 'none' }}>
+                  ☰
+                </button>
                 {backupPending && (
                   <div className="backup-notification" onClick={() => window.location.href = '/backup'}>
                     🔔⚠️ Backup mensal pendente! Clique para exportar.
