@@ -38,8 +38,8 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-// Auth config
-const JWT_SECRET = process.env.JWT_SECRET || 'recomeco-secret-key-2024';
+// Auth config - use Supabase JWT secret
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
