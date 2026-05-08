@@ -976,6 +976,17 @@ body {
     padding: 24px;
     margin: 16px;
   }
+  
+  /* Mentors */
+  .mentors-table {
+    overflow-x: auto;
+  }
+  
+  .mentors-cards {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1036,6 +1047,21 @@ body {
   .tag {
     font-size: 10px;
     padding: 4px 8px;
+  }
+  
+  /* Mentors */
+  .mentors-table {
+    display: none;
+  }
+  
+  .mentors-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .mentors-cards .person-card {
+    padding: 16px;
   }
 }
 

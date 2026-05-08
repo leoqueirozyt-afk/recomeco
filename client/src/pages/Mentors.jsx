@@ -99,51 +99,86 @@ function Mentors() {
           </button>
         </div>
       ) : (
-        <div className="card">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mentors.map(mentor => (
-                <tr key={mentor.id}>
-                  <td>{mentor.fullName}</td>
-                  <td>{mentor.phone || '-'}</td>
-                  <td>
-                    <span className={`tag ${mentor.active ? 'tag-baptized' : 'tag-not-baptized'}`}>
-                      {mentor.active ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="btn-group">
-                      {mentor.phone && (
-                        <a 
-                          href={`https://wa.me/${mentor.phone.replace(/\D/g, '')}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="btn btn-whatsapp btn-sm"
-                        >
-                          💬
-                        </a>
-                      )}
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(mentor)}>
-                        Editar
-                      </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(mentor.id)}>
-                        Excluir
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className="card mentors-table">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Telefone</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {mentors.map(mentor => (
+                  <tr key={mentor.id}>
+                    <td>{mentor.fullName}</td>
+                    <td>{mentor.phone || '-'}</td>
+                    <td>
+                      <span className={`tag ${mentor.active ? 'tag-baptized' : 'tag-not-baptized'}`}>
+                        {mentor.active ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="btn-group">
+                        {mentor.phone && (
+                          <a 
+                            href={`https://wa.me/${mentor.phone.replace(/\D/g, '')}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="btn btn-whatsapp btn-sm"
+                          >
+                            💬
+                          </a>
+                        )}
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(mentor)}>
+                          Editar
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(mentor.id)}>
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mentors-cards">
+            {mentors.map(mentor => (
+              <div className="person-card" key={mentor.id}>
+                <div className="person-name">{mentor.fullName}</div>
+                <div className="person-info">
+                  <strong>Telefone:</strong> {mentor.phone || '-'}
+                </div>
+                <div className="person-tags">
+                  <span className={`tag ${mentor.active ? 'tag-baptized' : 'tag-not-baptized'}`}>
+                    {mentor.active ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+                <div className="person-actions">
+                  {mentor.phone && (
+                    <a 
+                      href={`https://wa.me/${mentor.phone.replace(/\D/g, '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn btn-whatsapp btn-sm"
+                    >
+                      💬 WhatsApp
+                    </a>
+                  )}
+                  <button className="btn btn-secondary btn-sm" onClick={() => openEdit(mentor)}>
+                    Editar
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(mentor.id)}>
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {showModal && (
