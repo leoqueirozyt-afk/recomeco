@@ -74,13 +74,6 @@ app.post('/api/auth/login', (req, res) => {
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('SUPABASE_URL ou chave não configurada');
-}
-
-const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 // Helper functions
 function mapPerson(row) {
