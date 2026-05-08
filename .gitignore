@@ -33,3 +33,4 @@ supabase/
 
 # Server local (usar api/ para Vercel)
 server/
+.vercel

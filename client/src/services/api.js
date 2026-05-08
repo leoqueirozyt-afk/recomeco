@@ -1,5 +1,5 @@
 // API usando backend Vercel
-const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api-blush-two-18.vercel.app';
 
 let authToken = localStorage.getItem('recomeco_token');
 
