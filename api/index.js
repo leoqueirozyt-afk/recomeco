@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
+import * as XLSX from 'xlsx';
 
 const app = express();
 
@@ -32,11 +33,16 @@ app.use(cors({
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
+let supabase = null;
+let supabaseConfigured = false;
+
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey);
+  supabaseConfigured = true;
+  console.log('Supabase configurado');
+} else {
   console.error('SUPABASE_URL ou chave não configurada');
 }
-
-const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 // Auth config - use Supabase JWT secret
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
@@ -59,7 +65,7 @@ function authenticateToken(req, res, next) {
 }
 
 // Auth routes
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', requireSupabase, async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -101,7 +107,7 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
 });
 
 // Users routes (admin only)
-app.get('/api/users', authenticateToken, async (req, res) => {
+app.get('/api/users', requireSupabase, authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado' });
   }
@@ -117,7 +123,7 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/users', authenticateToken, async (req, res) => {
+app.post('/api/users', requireSupabase, authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado' });
   }
@@ -135,7 +141,7 @@ app.post('/api/users', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', authenticateToken, async (req, res) => {
+app.put('/api/users/:id', requireSupabase, authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado' });
   }
@@ -156,7 +162,7 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', authenticateToken, async (req, res) => {
+app.delete('/api/users/:id', requireSupabase, authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado' });
   }
@@ -171,6 +177,13 @@ app.delete('/api/users/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+function requireSupabase(req, res, next) {
+  if (!supabaseConfigured) {
+    return res.status(503).json({ error: 'Supabase não configurado' });
+  }
+  next();
+}
 
 // Helper functions
 function mapPerson(row) {
@@ -212,7 +225,24 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'Backend Recomeço funcionando' });
 });
 
-app.get('/api/people', async (req, res) => {
+app.get('/api/supabase-test', async (req, res) => {
+  if (!supabaseConfigured) {
+    return res.status(503).json({ ok: false, error: 'Supabase não configurado' });
+  }
+  try {
+    const { data, error } = await supabase
+      .from('people')
+      .select('id')
+      .limit(1);
+    
+    if (error) throw error;
+    res.json({ ok: true, message: 'Supabase conectado com sucesso', data: data || [] });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/people', requireSupabase, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('v_people_with_mentors')
@@ -226,7 +256,7 @@ app.get('/api/people', async (req, res) => {
   }
 });
 
-app.get('/api/people/:id', async (req, res) => {
+app.get('/api/people/:id', requireSupabase, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('v_people_with_mentors')
@@ -241,7 +271,7 @@ app.get('/api/people/:id', async (req, res) => {
   }
 });
 
-app.post('/api/people', async (req, res) => {
+app.post('/api/people', requireSupabase, async (req, res) => {
   try {
     const { data: person, error } = await supabase
       .from('people')
@@ -278,7 +308,7 @@ app.post('/api/people', async (req, res) => {
   }
 });
 
-app.put('/api/people/:id', async (req, res) => {
+app.put('/api/people/:id', requireSupabase, async (req, res) => {
   try {
     const { error } = await supabase
       .from('people')
@@ -317,7 +347,7 @@ app.put('/api/people/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/people/:id', async (req, res) => {
+app.delete('/api/people/:id', requireSupabase, async (req, res) => {
   try {
     const { error } = await supabase
       .from('people')
@@ -331,7 +361,7 @@ app.delete('/api/people/:id', async (req, res) => {
   }
 });
 
-app.get('/api/mentors', async (req, res) => {
+app.get('/api/mentors', requireSupabase, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('mentors')
@@ -345,7 +375,7 @@ app.get('/api/mentors', async (req, res) => {
   }
 });
 
-app.get('/api/mentors/:id', async (req, res) => {
+app.get('/api/mentors/:id', requireSupabase, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('mentors')
@@ -360,7 +390,7 @@ app.get('/api/mentors/:id', async (req, res) => {
   }
 });
 
-app.post('/api/mentors', async (req, res) => {
+app.post('/api/mentors', requireSupabase, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('mentors')
@@ -380,7 +410,7 @@ app.post('/api/mentors', async (req, res) => {
   }
 });
 
-app.put('/api/mentors/:id', async (req, res) => {
+app.put('/api/mentors/:id', requireSupabase, async (req, res) => {
   try {
     const { error } = await supabase
       .from('mentors')
@@ -399,7 +429,7 @@ app.put('/api/mentors/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/mentors/:id', async (req, res) => {
+app.delete('/api/mentors/:id', requireSupabase, async (req, res) => {
   try {
     const { error } = await supabase
       .from('mentors')
@@ -413,7 +443,7 @@ app.delete('/api/mentors/:id', async (req, res) => {
   }
 });
 
-app.get('/api/dashboard/summary', async (req, res) => {
+app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
   try {
     const { data: people, error } = await supabase
       .from('people')
@@ -476,7 +506,7 @@ app.get('/api/dashboard/summary', async (req, res) => {
   }
 });
 
-app.get('/api/backups/status', async (req, res) => {
+app.get('/api/backups/status', requireSupabase, async (req, res) => {
   try {
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
@@ -505,7 +535,7 @@ app.get('/api/backups/status', async (req, res) => {
   }
 });
 
-app.post('/api/backups/register', async (req, res) => {
+app.post('/api/backups/register', requireSupabase, async (req, res) => {
   try {
     const { backup_month, backup_year, total_people, notes } = req.body;
     
@@ -527,5 +557,95 @@ app.post('/api/backups/register', async (req, res) => {
   }
 });
 
+app.get('/api/backups/export/csv', requireSupabase, async (req, res) => {
+  try {
+    const { data: people, error } = await supabase
+      .from('v_people_with_mentors')
+      .select('*');
+    
+    if (error) throw error;
+
+    const csvRows = [['ID', 'Nome', 'Data Decisão', 'Mês Decisão', 'Data Nascimento', 'Endereço', 'Contato', 'Gênero', 'Batizado', 'Primeira Decisão', 'Status', 'Decisão Final', 'Anotações', 'Responsáveis', 'Criado em', 'Atualizado em']];
+    
+    for (const p of people || []) {
+      csvRows.push([
+        p.id,
+        p.full_name || '',
+        p.decision_date || '',
+        p.decision_month || '',
+        p.birth_date || '',
+        p.full_address || '',
+        p.contact || '',
+        p.gender || '',
+        p.baptized ? 'Sim' : 'Não',
+        p.first_decision || '',
+        p.disciple_status || '',
+        p.final_decision || '',
+        p.notes || '',
+        p.mentors || '',
+        p.created_at || '',
+        p.updated_at || ''
+      ]);
+    }
+
+    const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=recomeco-backup.csv');
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/backups/export/xlsx', requireSupabase, async (req, res) => {
+  try {
+    const { data: people, error } = await supabase
+      .from('v_people_with_mentors')
+      .select('*');
+    
+    if (error) throw error;
+
+    const rows = (people || []).map(p => ({
+      ID: p.id,
+      Nome: p.full_name,
+      'Data Decisão': p.decision_date,
+      'Mês Decisão': p.decision_month,
+      'Data Nascimento': p.birth_date,
+      Endereço: p.full_address,
+      Contato: p.contact,
+      Gênero: p.gender,
+      Batizado: p.baptized ? 'Sim' : 'Não',
+      'Primeira Decisão': p.first_decision,
+      Status: p.disciple_status,
+      'Decisão Final': p.final_decision,
+      Anotações: p.notes,
+      Responsáveis: p.mentors,
+      'Criado em': p.created_at,
+      'Atualizado em': p.updated_at
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Pessoas');
+    
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=recomeco-backup.xlsx');
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Export for Vercel
 export default app;
+
+// Development server
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+  });
+}
