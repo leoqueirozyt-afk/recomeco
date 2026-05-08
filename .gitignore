@@ -1,0 +1,40 @@
+# dependências
+node_modules/
+
+# banco de dados
+*.sqlite
+*.db
+server/src/database.sqlite
+
+# ambiente
+.env
+.env.local
+.env.*
+!.env.example
+
+# build
+dist/
+build/
+
+# logs
+*.log
+npm-debug.log*
+
+# sistema
+.DS_Store
+Thumbs.db
+
+# backups locais
+backups/
+*.csv
+*.xlsx
+
+# Supabase
+supabase/
+
+# Server node_modules
+server/node_modules/
+client/node_modules/
+
+# Imagens/Downloads temporários
+Downloads/
