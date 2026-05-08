@@ -66,8 +66,18 @@ function authenticateToken(req, res, next) {
 }
 
 // Auth routes
+app.get('/api/auth/health', (req, res) => {
+  res.json({ ok: true, message: 'Auth route funcionando', supabaseConfigured });
+});
+
 app.post('/api/auth/login', requireSupabase, async (req, res) => {
   const { email, password } = req.body;
+  
+  console.log('Login recebido para:', email);
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+  }
 
   try {
     const { data, error } = await supabase
@@ -78,7 +88,7 @@ app.post('/api/auth/login', requireSupabase, async (req, res) => {
       .single();
 
     if (error || !data) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
     }
 
     if (data.password_hash === password) {
@@ -88,6 +98,7 @@ app.post('/api/auth/login', requireSupabase, async (req, res) => {
         userId: data.id 
       }, JWT_SECRET, { expiresIn: '24h' });
       res.json({ 
+        ok: true, 
         token, 
         user: { 
           email: data.email, 
@@ -96,10 +107,11 @@ app.post('/api/auth/login', requireSupabase, async (req, res) => {
         } 
       });
     } else {
-      res.status(401).json({ error: 'Credenciais inválidas' });
+      res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Erro no servidor' });
+    console.error('Erro em /api/auth/login:', error);
+    res.status(500).json({ ok: false, error: 'Erro interno ao fazer login.', details: error.message });
   }
 });
 
