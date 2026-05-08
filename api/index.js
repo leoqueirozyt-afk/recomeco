@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 import * as XLSX from 'xlsx';
 
@@ -91,44 +92,64 @@ app.get('/api/auth/user-check/:email', requireSupabase, async (req, res) => {
 app.post('/api/auth/login', requireSupabase, async (req, res) => {
   const { email, password } = req.body;
   
-  console.log('Login recebido para:', email, { hasPassword: Boolean(password) });
+  const normalizedEmail = String(email).trim().toLowerCase();
+  console.log('Login recebido para:', normalizedEmail, { hasPassword: Boolean(password) });
 
   if (!email || !password) {
     return res.status(400).json({ ok: false, error: 'E-mail e senha são obrigatórios.' });
   }
 
   try {
-    const { data, error } = await supabase
+    const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, full_name, role, active, password_hash')
-      .eq('email', email)
+      .select('id, email, password_hash, full_name, role, active')
+      .eq('email', normalizedEmail)
       .single();
 
-    console.log('Consulta users para:', email, { found: Boolean(data), error: error?.message });
+    console.log('Consulta users para:', normalizedEmail, { found: Boolean(user), error: error?.message });
 
-    if (error || !data) {
-      return res.status(401).json({ ok: false, error: 'Credenciais inválidas', debug: error?.message });
+    if (error || !user) {
+      return res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
     }
 
-    if (!data.active) {
-      return res.status(401).json({ ok: false, error: 'Usuário inativo' });
+    if (!user.active) {
+      return res.status(403).json({ ok: false, error: 'Usuário inativo. Fale com um administrador.' });
     }
 
-    if (data.password_hash === password) {
-      const token = jwt.sign({ 
-        email: data.email, 
-        role: data.role,
-        userId: data.id 
-      }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ 
-        ok: true, 
-        token, 
-        user: { 
-          email: data.email, 
-          role: data.role,
-          fullName: data.full_name 
-        } 
-      });
+    const passwordIsValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!passwordIsValid) {
+      console.log('Senha incorreta para:', normalizedEmail);
+      return res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
+    }
+
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        fullName: user.full_name
+      },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    res.json({
+      ok: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        active: user.active
+      }
+    });
+  } catch (error) {
+    console.error('Erro em /api/auth/login:', error);
+    res.status(500).json({ ok: false, error: 'Erro interno ao fazer login.', details: error.message });
+  }
+});
     } else {
       console.log('Senha incorreta para:', email);
       res.status(401).json({ ok: false, error: 'Credenciais inválidas' });
