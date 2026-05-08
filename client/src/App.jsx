@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from './services/api';
 import { backupService } from './services/backupService';
@@ -43,14 +43,13 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  return isAuth ? children : <Navigate to="/login" />;
+  return isAuth ? children : <Navigate to="/login" replace />;
 }
 
 function App() {
   const [isAuth, setIsAuth] = useState(null);
   const [backupPending, setBackupPending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     setIsAuth(auth.isAuthenticated());
@@ -69,8 +68,7 @@ function App() {
 
   const handleLogout = () => {
     auth.logout();
-    setIsAuth(false);
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   const toggleSidebar = () => {
@@ -89,7 +87,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={
-          auth.isAuthenticated() ? <Navigate to="/" /> : <Login />
+          auth.isAuthenticated() ? <Navigate to="/" replace /> : <Login />
         } />
         <Route path="/*" element={
           <ProtectedRoute>
@@ -105,13 +103,13 @@ function App() {
                 <nav>
                   <ul className="nav-menu">
                     <li className="nav-item">
-                      <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
+                      <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
                         <span className="nav-icon">👑</span>
                         Líderes
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end onClick={closeSidebar}>
+                      <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
                         <span className="nav-icon">📊</span>
                         Dashboard
                       </NavLink>
