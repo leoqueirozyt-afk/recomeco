@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from './services/api';
 import { backupService } from './services/backupService';
@@ -50,6 +50,7 @@ function App() {
   const [isAuth, setIsAuth] = useState(null);
   const [backupPending, setBackupPending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsAuth(auth.isAuthenticated());
@@ -69,7 +70,7 @@ function App() {
   const handleLogout = () => {
     auth.logout();
     setIsAuth(false);
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const toggleSidebar = () => {
