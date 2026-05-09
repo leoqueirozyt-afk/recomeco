@@ -1,13 +1,45 @@
 import { getApiBase } from './getApiBase';
 
-let authToken = localStorage.getItem('recomeco_token');
+function getToken() {
+  return localStorage.getItem('recomeco_token');
+}
+
+function setToken(token) {
+  localStorage.setItem('recomeco_token', token);
+}
+
+function removeToken() {
+  localStorage.removeItem('recomeco_token');
+  localStorage.removeItem('recomeco_user');
+}
+
+function getUser() {
+  const u = localStorage.getItem('recomeco_user');
+  return u ? JSON.parse(u) : null;
+}
+
+function setUser(user) {
+  localStorage.setItem('recomeco_user', JSON.stringify(user));
+}
+
+function buildHeaders(extra = {}) {
+  const token = getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra
+  };
+}
 
 export const api = {
   async get(endpoint) {
     const res = await fetch(`${getApiBase()}${endpoint}`, {
-      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      headers: buildHeaders()
     });
-    if (!res.ok) throw new Error('Erro na requisição');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Erro na requisição' }));
+      throw new Error(err.error || 'Erro na requisição');
+    }
     return res.json();
   },
 
@@ -15,10 +47,7 @@ export const api = {
     try {
       const res = await fetch(`${getApiBase()}${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
-        },
+        headers: buildHeaders(),
         body: JSON.stringify(data)
       });
       const result = await res.json();
@@ -35,22 +64,25 @@ export const api = {
   async put(endpoint, data) {
     const res = await fetch(`${getApiBase()}${endpoint}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
-      },
+      headers: buildHeaders(),
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Erro na requisição');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Erro na requisição' }));
+      throw new Error(err.error || 'Erro na requisição');
+    }
     return res.json();
   },
 
   async delete(endpoint) {
     const res = await fetch(`${getApiBase()}${endpoint}`, {
       method: 'DELETE',
-      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+      headers: buildHeaders()
     });
-    if (!res.ok) throw new Error('Erro na requisição');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Erro na requisição' }));
+      throw new Error(err.error || 'Erro na requisição');
+    }
     return res.json();
   }
 };
@@ -70,8 +102,13 @@ export const auth = {
         throw new Error(data.error || 'Credenciais inválidas');
       }
 
-      authToken = data.token;
-      localStorage.setItem('recomeco_token', data.token);
+      if (data.token) {
+        setToken(data.token);
+      }
+      if (data.user) {
+        setUser(data.user);
+      }
+
       return data;
     } catch (err) {
       if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
@@ -82,29 +119,47 @@ export const auth = {
   },
 
   logout() {
-    authToken = null;
-    localStorage.removeItem('recomeco_token');
+    removeToken();
   },
 
   isAuthenticated() {
-    return Boolean(authToken);
+    return Boolean(getToken());
+  },
+
+  getUser() {
+    return getUser();
   },
 
   async verify() {
-    if (!authToken) return false;
+    const token = getToken();
+    if (!token) return null;
+
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${getApiBase()}/api/auth/verify`, {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal
       });
 
       clearTimeout(timeout);
-      return res.ok;
+
+      if (res.status === 401) {
+        removeToken();
+        return null;
+      }
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (data.ok && data.user) {
+        setUser(data.user);
+        return data.user;
+      }
+      return null;
     } catch {
-      return false;
+      return null;
     }
   }
 };

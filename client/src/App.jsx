@@ -18,20 +18,12 @@ function ProtectedRoute({ children }) {
 
   useEffect(() => {
     let cancelled = false;
+
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('recomeco_token');
-        if (!token) {
-          if (!cancelled) setChecking(false);
-          return;
-        }
-
-        const res = await fetch(`${getApiBase()}/api/auth/verify`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
+        const user = await auth.verify();
         if (!cancelled) {
-          setIsAuth(res.ok);
+          setIsAuth(!!user);
           setChecking(false);
         }
       } catch {
@@ -41,6 +33,7 @@ function ProtectedRoute({ children }) {
         }
       }
     };
+
     checkAuth();
     return () => { cancelled = true; };
   }, []);
@@ -70,35 +63,20 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
-  const [isAuth, setIsAuth] = useState(null);
   const [backupPending, setBackupPending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    setIsAuth(auth.isAuthenticated());
     backupService.checkPendingBackup(0, 0).then(setBackupPending).catch(() => {});
   }, []);
 
   const handleLogout = () => {
-    const token = localStorage.getItem('recomeco_token');
     auth.logout();
-    if (token) {
-      localStorage.removeItem('recomeco_token');
-    }
     window.location.replace('/');
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
-
-  if (isAuth === null) {
-    return null;
-  }
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <BrowserRouter>
@@ -110,9 +88,7 @@ function App() {
         <Route path="/*" element={
           <ProtectedRoute>
             <div className="app-container">
-              <button className="hamburger-btn" onClick={toggleSidebar}>
-                ☰
-              </button>
+              <button className="hamburger-btn" onClick={toggleSidebar}>☰</button>
               <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                   <img src="/logo.png" alt="Recomeço" className="logo-img" />
@@ -122,44 +98,37 @@ function App() {
                   <ul className="nav-menu">
                     <li className="nav-item">
                       <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
-                        <span className="nav-icon">👑</span>
-                        Líderes
+                        <span className="nav-icon">👑</span>Líderes
                       </NavLink>
                     </li>
                     <li className="nav-item">
                       <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
-                        <span className="nav-icon">📊</span>
-                        Dashboard
+                        <span className="nav-icon">📊</span>Dashboard
                       </NavLink>
                     </li>
                     <li className="nav-item">
                       <NavLink to="/people" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">👥</span>
-                        Pessoas
+                        <span className="nav-icon">👥</span>Pessoas
                       </NavLink>
                     </li>
                     <li className="nav-item">
                       <NavLink to="/visitors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">👋</span>
-                        Visitantes
+                        <span className="nav-icon">👋</span>Visitantes
                       </NavLink>
                     </li>
                     <li className="nav-item">
                       <NavLink to="/people/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">➕</span>
-                        Novo
+                        <span className="nav-icon">➕</span>Novo
                       </NavLink>
                     </li>
                     <li className="nav-item">
                       <NavLink to="/backup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${backupPending ? 'backup-pending' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">{backupPending ? '🔔' : '💾'}</span>
-                        Backup {backupPending && '⚠️'}
+                        <span className="nav-icon">{backupPending ? '🔔' : '💾'}</span>Backup {backupPending && '⚠️'}
                       </NavLink>
                     </li>
                     <li className="nav-item" style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
                       <button onClick={handleLogout} className="nav-link" style={{ width: '100%', border: 'none', background: 'none', cursor: 'pointer' }}>
-                        <span className="nav-icon">🚪</span>
-                        Sair
+                        <span className="nav-icon">🚪</span>Sair
                       </button>
                     </li>
                   </ul>

@@ -58,12 +58,12 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' });
+    return res.status(401).json({ ok: false, error: 'Token não enviado.' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ error: 'Token inválido' });
+      return res.status(401).json({ ok: false, error: 'Token inválido ou expirado.' });
     }
     req.user = user;
     next();
@@ -156,7 +156,15 @@ app.post('/api/auth/login', requireSupabase, async (req, res) => {
 });
 
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
-  res.json({ valid: true, user: req.user });
+  res.json({
+    ok: true,
+    user: {
+      id: req.user.sub,
+      email: req.user.email,
+      fullName: req.user.fullName,
+      role: req.user.role
+    }
+  });
 });
 
 // Users routes (admin only)
