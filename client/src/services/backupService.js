@@ -2,13 +2,11 @@ const API_BASE = (() => {
   const configuredUrl = import.meta.env.VITE_API_URL;
   if (configuredUrl) return configuredUrl;
 
-  const currentOrigin = window.location.origin;
+  const origin = window.location.origin;
 
-  if (currentOrigin.includes('.vercel.app') || currentOrigin.includes('vercel-preview-url.com')) {
-    const urlParts = currentOrigin.replace('https://', '').split('.');
-    if (urlParts[0] !== 'recomeco-nu') {
-      const projectName = urlParts[0];
-      return `https://recomeco-api-${projectName}.vercel.app`;
+  if (origin.includes('.vercel.app') && !origin.includes('recomeco-nu') && !origin.includes('recomeco-server')) {
+    if (origin.startsWith('https://recomeco-git-')) {
+      return origin.replace('https://recomeco-git-', 'https://recomeco-api-git-');
     }
   }
 

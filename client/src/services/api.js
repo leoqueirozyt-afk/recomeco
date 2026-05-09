@@ -1,20 +1,4 @@
-// API usando backend Vercel
-function getApiBase() {
-  const configuredUrl = import.meta.env.VITE_API_URL;
-  if (configuredUrl) return configuredUrl;
-
-  const currentOrigin = window.location.origin;
-
-  if (currentOrigin.includes('.vercel.app') || currentOrigin.includes('vercel-preview-url.com')) {
-    const urlParts = currentOrigin.replace('https://', '').split('.');
-    if (urlParts[0] !== 'recomeco-nu') {
-      const projectName = urlParts[0];
-      return `https://recomeco-api-${projectName}.vercel.app`;
-    }
-  }
-
-  return 'https://recomeco-server.vercel.app';
-}
+import { getApiBase } from './getApiBase';
 
 const API_BASE = getApiBase();
 

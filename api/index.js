@@ -21,7 +21,11 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (process.env.NODE_ENV !== 'production' || !origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.vercel-preview-url.com')) {
+    if (!origin) {
+      callback(null, true);
+    } else if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else if (origin.includes('.vercel.app')) {
       callback(null, true);
     } else {
       callback(new Error("Origem não permitida pelo CORS"));
