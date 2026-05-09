@@ -251,6 +251,7 @@ function mapPerson(row) {
     finalDecision: row.final_decision,
     photo: null,
     notes: row.notes,
+    visitorId: row.visitor_id,
     mentors: row.mentors || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -272,6 +273,47 @@ function mapMentor(row) {
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'Backend Recomeço funcionando' });
+});
+
+// =============================================
+// ROTAS PÚBLICAS (sem autenticação)
+// =============================================
+app.post('/api/public/visitors', async (req, res) => {
+  try {
+    const { visit_date, first_name, last_name, whatsapp, notes } = req.body;
+
+    if (!first_name) {
+      return res.status(400).json({ ok: false, error: 'Nome é obrigatório.' });
+    }
+
+    if (!visit_date) {
+      return res.status(400).json({ ok: false, error: 'Data da visita é obrigatória.' });
+    }
+
+    const { data: visitor, error } = await supabase
+      .from('visitors')
+      .insert({
+        visit_date,
+        first_name,
+        last_name: last_name || null,
+        whatsapp: whatsapp || null,
+        notes: notes || null,
+        sent_to_recomeco: false,
+        recomeco_person_id: null
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      ok: true,
+      message: 'Visitante cadastrado com sucesso.',
+      visitor: mapVisitor(visitor)
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.get('/api/supabase-test', async (req, res) => {
@@ -513,6 +555,23 @@ app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
     const peopleWithMentor = new Set(links?.map(l => l.person_id) || []);
     const withoutMentor = all.filter(p => !peopleWithMentor.has(p.id)).length;
 
+    // Visitors stats
+    const { data: visitors } = await supabase.from('visitors').select('*');
+    const visitorsAll = visitors || [];
+    const now = new Date();
+    const currentMonthStr = String(now.getMonth() + 1).padStart(2, '0');
+    const currentYearStr = String(now.getFullYear());
+    const todayStr = String(now.getFullYear()) + '-' + currentMonthStr + '-' + String(now.getDate()).padStart(2, '0');
+    const totalVisitors = visitorsAll.length;
+    const visitorsToday = visitorsAll.filter(v => v.visit_date === todayStr).length;
+    const thisMonthVisitors = visitorsAll.filter(v => {
+      if (!v.visit_date) return false;
+      const d = String(v.visit_date);
+      return d.startsWith(currentYearStr + '-' + currentMonthStr);
+    }).length;
+    const visitorsNotSent = visitorsAll.filter(v => !v.sent_to_recomeco).length;
+    const visitorsSent = visitorsAll.filter(v => v.sent_to_recomeco).length;
+
     const { data: recentPeople } = await supabase
       .from('people')
       .select('*')
@@ -547,6 +606,7 @@ app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
 
     res.json({
       total, inCare, awaitingDecision, disciple, visitor, baptized, notBaptized, withoutMentor,
+      totalVisitors, visitorsToday, thisMonthVisitors, visitorsNotSent, visitorsSent,
       byStatus, byMonth, byFirstDecision, byGender,
       recentPeople: (recentPeople || []).map(mapPerson)
     });
@@ -611,17 +671,20 @@ app.get('/api/backups/export/csv', requireSupabase, async (req, res) => {
     const { data: people, error } = await supabase
       .from('v_people_with_mentors')
       .select('*');
-    
+
     if (error) throw error;
 
-    const csvRows = [['ID', 'Nome', 'Data Decisão', 'Mês Decisão', 'Data Nascimento', 'Endereço', 'Contato', 'Gênero', 'Batizado', 'Primeira Decisão', 'Status', 'Decisão Final', 'Anotações', 'Responsáveis', 'Criado em', 'Atualizado em']];
-    
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+
+    const csvRows = [['Data da decisão', 'Mês da decisão', 'Nome completo', 'Data de nascimento', 'Endereço completo', 'Contato', 'Sexo', 'Batizado', 'Primeira decisão', 'Status', 'Decisão final', 'Responsáveis', 'Observações', 'Data de criação', 'Data de atualização']];
+
     for (const p of people || []) {
       csvRows.push([
-        p.id,
-        p.full_name || '',
         p.decision_date || '',
         p.decision_month || '',
+        p.full_name || '',
         p.birth_date || '',
         p.full_address || '',
         p.contact || '',
@@ -630,17 +693,17 @@ app.get('/api/backups/export/csv', requireSupabase, async (req, res) => {
         p.first_decision || '',
         p.disciple_status || '',
         p.final_decision || '',
-        p.notes || '',
         p.mentors || '',
+        p.notes || '',
         p.created_at || '',
         p.updated_at || ''
       ]);
     }
 
     const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    
+
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=recomeco-backup.csv');
+    res.setHeader('Content-Disposition', `attachment; filename=recomeco-acompanhamento-${month}-${year}.csv`);
     res.send(csv);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -674,9 +737,24 @@ app.get('/api/backups/export/xlsx', requireSupabase, async (req, res) => {
       'Atualizado em': p.updated_at
     }));
 
-    const ws = XLSX.utils.json_to_sheet(rows);
+    const { data: visitors } = await supabase.from('visitors').select('*');
+    const visitorsRows = (visitors || []).map(v => ({
+      'Data da visita': v.visit_date || '',
+      Nome: v.first_name || '',
+      Sobrenome: v.last_name || '',
+      WhatsApp: v.whatsapp || '',
+      Observações: v.notes || '',
+      'Entrou em acompanhamento': v.sent_to_recomeco ? 'Sim' : 'Não',
+      'ID Cadastro Completo': v.recomeco_person_id || '',
+      'Data de criação': v.created_at || '',
+      'Data de atualização': v.updated_at || ''
+    }));
+
+    const ws1 = XLSX.utils.json_to_sheet(rows);
+    const ws2 = XLSX.utils.json_to_sheet(visitorsRows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Pessoas');
+    XLSX.utils.book_append_sheet(wb, ws1, 'Acompanhamento');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Visitantes');
     
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
     
@@ -685,6 +763,244 @@ app.get('/api/backups/export/xlsx', requireSupabase, async (req, res) => {
     res.send(buffer);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/backups/export/visitors/csv', requireSupabase, async (req, res) => {
+  try {
+    const { data: visitors, error } = await supabase
+      .from('visitors')
+      .select('*')
+      .order('visit_date', { ascending: false });
+
+    if (error) throw error;
+
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+
+    const csvRows = [['Data da visita', 'Nome', 'Sobrenome', 'WhatsApp', 'Observações', 'Entrou em acompanhamento', 'ID Cadastro Completo', 'Data de criação', 'Data de atualização']];
+
+    for (const v of visitors || []) {
+      csvRows.push([
+        v.visit_date || '',
+        v.first_name || '',
+        v.last_name || '',
+        v.whatsapp || '',
+        v.notes || '',
+        v.sent_to_recomeco ? 'Sim' : 'Não',
+        v.recomeco_person_id || '',
+        v.created_at || '',
+        v.updated_at || ''
+      ]);
+    }
+
+    const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=recomeco-visitantes-${month}-${year}.csv`);
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+function mapVisitor(row) {
+  return {
+    id: row.id,
+    visitDate: row.visit_date,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    whatsapp: row.whatsapp,
+    notes: row.notes,
+    sentToRecomeco: row.sent_to_recomeco,
+    recomecoPersonId: row.recomeco_person_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+// Visitors routes
+app.get('/api/visitors', requireSupabase, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('visitors')
+      .select('*')
+      .order('visit_date', { ascending: false });
+    
+    if (error) throw error;
+    res.json((data || []).map(mapVisitor));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/visitors/:id', requireSupabase, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('visitors')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    
+    if (error) return res.status(404).json({ error: 'Visitante não encontrado' });
+    res.json(mapVisitor(data));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/visitors', requireSupabase, async (req, res) => {
+  try {
+    const { data: visitor, error } = await supabase
+      .from('visitors')
+      .insert({
+        visit_date: req.body.visitDate || req.body.visit_date || null,
+        first_name: req.body.firstName || req.body.first_name,
+        last_name: req.body.lastName || req.body.last_name || null,
+        whatsapp: req.body.whatsapp || null,
+        notes: req.body.notes || null,
+        sent_to_recomeco: false,
+        recomeco_person_id: null
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    res.status(201).json({ id: visitor.id, message: 'Visitante cadastrado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/visitors/:id', requireSupabase, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('visitors')
+      .update({
+        visit_date: req.body.visitDate || req.body.visit_date || null,
+        first_name: req.body.firstName || req.body.first_name,
+        last_name: req.body.lastName || req.body.last_name || null,
+        whatsapp: req.body.whatsapp || null,
+        notes: req.body.notes || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', req.params.id);
+    
+    if (error) throw error;
+    res.json({ message: 'Visitante atualizado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/visitors/:id', requireSupabase, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('visitors')
+      .delete()
+      .eq('id', req.params.id);
+    
+    if (error) throw error;
+    res.json({ message: 'Visitante excluído com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/visitors/:id/send-to-recomeco', requireSupabase, async (req, res) => {
+  try {
+    const { data: visitor, error: visitorError } = await supabase
+      .from('visitors')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (visitorError || !visitor) {
+      return res.status(404).json({ ok: false, error: 'Visitante não encontrado' });
+    }
+
+    if (visitor.sent_to_recomeco) {
+      return res.status(400).json({ ok: false, error: 'Este visitante já possui cadastro completo no acompanhamento.' });
+    }
+
+    res.status(400).json({
+      ok: false,
+      error: 'Use o fluxo de completar cadastro para iniciar acompanhamento.',
+      hint: 'Acesse o visitante na área interna e clique em "Completar cadastro" para preencher os dados completos.'
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/visitors/:id/complete-registration', requireSupabase, async (req, res) => {
+  try {
+    const { data: visitor, error: visitorError } = await supabase
+      .from('visitors')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (visitorError || !visitor) {
+      return res.status(404).json({ ok: false, error: 'Visitante não encontrado' });
+    }
+
+    if (visitor.sent_to_recomeco) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Este visitante já possui cadastro completo no acompanhamento.'
+      });
+    }
+
+    const { decision_date, decision_month, full_name, birth_date, full_address, contact, gender, baptized, first_decision, disciple_status, final_decision, notes: personNotes, mentor_ids, visitor_id } = req.body;
+
+    const { data: person, error: personError } = await supabase
+      .from('people')
+      .insert({
+        decision_date: decision_date || visitor.visit_date || null,
+        decision_month: decision_month || null,
+        full_name: full_name || (visitor.first_name + (visitor.last_name ? ' ' + visitor.last_name : '')),
+        birth_date: birth_date || null,
+        full_address: full_address || null,
+        contact: contact || visitor.whatsapp || null,
+        gender: gender || null,
+        baptized: baptized === true || baptized === 'Sim',
+        first_decision: first_decision || 'Visitante',
+        disciple_status: disciple_status || 'Em cuidado',
+        final_decision: final_decision || 'Em acompanhamento',
+        notes: personNotes || visitor.notes || null,
+        visitor_id: visitor.id
+      })
+      .select()
+      .single();
+
+    if (personError) throw personError;
+
+    if (mentor_ids && mentor_ids.length > 0) {
+      const mentorLinks = mentor_ids.map(mentorId => ({
+        person_id: person.id,
+        mentor_id: mentorId
+      }));
+      await supabase.from('people_mentors').insert(mentorLinks);
+    }
+
+    await supabase
+      .from('visitors')
+      .update({
+        sent_to_recomeco: true,
+        recomeco_person_id: person.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', req.params.id);
+
+    res.json({
+      ok: true,
+      message: 'Cadastro completo criado com sucesso.',
+      person: mapPerson(person)
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 

@@ -25,51 +25,35 @@ export const backupService = {
   },
 
   async exportCSV() {
-    const res = await fetch(`${API_BASE}/api/people`);
-    const people = await res.json();
+    const res = await fetch(`${API_BASE}/api/backups/export/csv`);
+    if (!res.ok) throw new Error('Erro ao exportar CSV');
+    return res.blob();
+  },
 
-    const headers = [
-      'Data da decisão',
-      'Mês da decisão',
-      'Nome completo',
-      'Data de nascimento',
-      'Endereço completo',
-      'Contato',
-      'Sexo',
-      'Batizado',
-      'Primeira decisão',
-      'Status',
-      'Decisão final',
-      'Responsáveis',
-      'Observações',
-      'Data de criação',
-      'Data de atualização'
-    ];
+  downloadCSV(blob, month, year) {
+    const filename = `recomeco-acompanhamento-${String(month).padStart(2, '0')}-${year}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
 
-    const rows = people.map(person => [
-      person.decisionDate || '',
-      person.decisionMonth || '',
-      person.fullName || '',
-      person.birthDate || '',
-      person.fullAddress || '',
-      person.contact || '',
-      person.gender || '',
-      person.baptized || '',
-      person.firstDecision || '',
-      person.discipleStatus || '',
-      person.finalDecision || '',
-      person.mentors || '',
-      person.notes || '',
-      person.createdAt || '',
-      person.updatedAt || ''
-    ].map(val => String(val).replace(/"/g, '""')));
+  async exportVisitorsCSV() {
+    const res = await fetch(`${API_BASE}/api/backups/export/visitors/csv`);
+    if (!res.ok) throw new Error('Erro ao exportar visitantes');
+    return res.blob();
+  },
 
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map(row => row.join(';'))
-    ].join('\n');
-
-    return csvContent;
+  downloadVisitorsCSV(blob, month, year) {
+    const filename = `recomeco-visitantes-${String(month).padStart(2, '0')}-${year}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   },
 
   downloadCSV(content, month, year) {
@@ -109,23 +93,41 @@ export const backupService = {
     return { data, filename: 'Backup' };
   },
 
-  downloadExcel(month, year) {
-    import('xlsx').then(XLSX => {
-      this.exportExcel().then(({ data, filename }) => {
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Backup');
-        
-        const colWidths = [
-          { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
-          { wch: 30 }, { wch: 15 }, { wch: 10 }, { wch: 10 },
-          { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
-          { wch: 25 }, { wch: 20 }, { wch: 20 }
-        ];
-        ws['!cols'] = colWidths;
+  async exportVisitorsCSV() {
+    const res = await fetch(`${API_BASE}/api/backups/export/visitors/csv`);
+    if (!res.ok) throw new Error('Erro ao exportar visitantes');
+    return res.blob();
+  },
 
-        XLSX.writeFile(wb, `recomeco-backup-${String(month).padStart(2, '0')}-${year}.xlsx`);
-      });
+  downloadVisitorsCSV(blob, month, year) {
+    const filename = `recomeco-visitantes-${String(month).padStart(2, '0')}-${year}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  async exportVisitorsExcel() {
+    const res = await fetch(`${API_BASE}/api/backups/export/xlsx`);
+    if (!res.ok) throw new Error('Erro ao exportar Excel');
+    return res.blob();
+  },
+
+  downloadVisitorsExcel(blob, month, year) {
+    const filename = `recomeco-backup-${String(month).padStart(2, '0')}-${year}.xlsx`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  downloadExcel(month, year) {
+    this.exportVisitorsExcel().then(blob => {
+      this.downloadVisitorsExcel(blob, month, year);
     });
   }
 };

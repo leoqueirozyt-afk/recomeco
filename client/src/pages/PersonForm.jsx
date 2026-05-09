@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { getPerson, createPerson, updatePerson, getMentors } from '../services/api';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { getPerson, createPerson, updatePerson, getMentors, getVisitor, completeVisitorRegistration } from '../services/api';
 
 const FIRST_DECISIONS = ['Aceitou Jesus', 'Reconciliação', 'Visitante', 'Pedido de oração', 'Outro'];
 const STATUS_OPTIONS = ['Em cuidado', 'Aguardando decisão', 'Discípulo', 'Visitante'];
@@ -9,7 +9,10 @@ const FINAL_DECISIONS = ['Em acompanhamento', 'Tornou-se discípulo', 'Permanece
 function PersonForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const visitorId = searchParams.get('visitorId');
   const isEditing = Boolean(id);
+  const isCompletingVisitor = Boolean(visitorId);
 
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +26,7 @@ function PersonForm() {
     contact: '',
     gender: '',
     baptized: 'Não',
-    firstDecision: '',
+    firstDecision: 'Visitante',
     discipleStatus: 'Em cuidado',
     finalDecision: 'Em acompanhamento',
     photo: '',
@@ -33,14 +36,25 @@ function PersonForm() {
 
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, [id, visitorId]);
 
   const loadData = async () => {
     try {
       const [mentorsData] = await Promise.all([getMentors()]);
       setMentors(mentorsData.filter(m => m.active));
 
-      if (id) {
+      if (visitorId) {
+        const visitor = await getVisitor(visitorId);
+        const fullName = visitor.firstName + (visitor.lastName ? ' ' + visitor.lastName : '');
+        const visitDateStr = visitor.visitDate || new Date().toISOString().split('T')[0];
+        setForm(prev => ({
+          ...prev,
+          decisionDate: visitDateStr,
+          fullName,
+          contact: visitor.whatsapp || '',
+          notes: visitor.notes || ''
+        }));
+      } else if (id) {
         const person = await getPerson(id);
         const mentorIds = person.mentors
           ? person.mentors.split(', ').map(m => parseInt(m.id || m))
@@ -122,12 +136,16 @@ function PersonForm() {
         decisionMonth: form.decisionDate ? new Date(form.decisionDate).toLocaleString('pt-BR', { month: 'long' }) : null
       };
 
-      if (isEditing) {
+      if (isCompletingVisitor) {
+        await completeVisitorRegistration(visitorId, data);
+        alert('Cadastro completo criado com sucesso!');
+        navigate('/visitors');
+      } else if (isEditing) {
         await updatePerson(id, data);
       } else {
         await createPerson(data);
       }
-      navigate('/people');
+      navigate(isCompletingVisitor ? '/visitors' : '/people');
     } catch (error) {
       console.error('Erro ao salvar:', error);
       alert('Erro ao salvar: ' + error.message);
@@ -140,11 +158,23 @@ function PersonForm() {
     return <div className="empty-state">Carregando...</div>;
   }
 
+  const pageTitle = isCompletingVisitor
+    ? 'Completar Cadastro'
+    : isEditing
+      ? 'Editar Pessoa'
+      : 'Novo Cadastro';
+
+  const pageSubtitle = isCompletingVisitor
+    ? 'Preencha os dados completos para iniciar o acompanhamento'
+    : isEditing
+      ? 'Atualize os dados da pessoa'
+      : 'Cadastre uma nova pessoa';
+
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">{isEditing ? 'Editar Pessoa' : 'Novo Cadastro'}</h1>
-        <p className="page-subtitle">{isEditing ? 'Atualize os dados da pessoa' : 'Cadastre uma nova pessoa'}</p>
+        <h1 className="page-title">{pageTitle}</h1>
+        <p className="page-subtitle">{pageSubtitle}</p>
       </div>
 
       <form className="card" onSubmit={handleSubmit}>
@@ -179,8 +209,8 @@ function PersonForm() {
           </div>
         </div>
 
-        <h3 style={{ marginBottom: '20px',color: 'var(--primary)' }}>Dados Pessoais</h3>
-        
+        <h3 style={{ marginBottom: '20px', color: 'var(--primary)' }}>Dados Pessoais</h3>
+
         <div className="form-row">
           <div className="form-group">
             <label className="form-label">Nome Completo *</label>
@@ -349,9 +379,9 @@ function PersonForm() {
 
         <div className="btn-group" style={{ marginTop: '24px' }}>
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Salvando...' : isEditing ? 'Atualizar' : 'Cadastrar'}
+            {saving ? 'Salvando...' : isCompletingVisitor ? 'Iniciar Acompanhamento' : isEditing ? 'Atualizar' : 'Cadastrar'}
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/people')}>
+          <button type="button" className="btn btn-secondary" onClick={() => navigate(isCompletingVisitor ? '/visitors' : '/people')}>
             Cancelar
           </button>
         </div>
