@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
+const API_BASE = (() => {
+  const configuredUrl = import.meta.env.VITE_API_URL;
+  if (configuredUrl) return configuredUrl;
+
+  const currentOrigin = window.location.origin;
+
+  if (currentOrigin.includes('.vercel.app') || currentOrigin.includes('vercel-preview-url.com')) {
+    const urlParts = currentOrigin.replace('https://', '').split('.');
+    if (urlParts[0] !== 'recomeco-nu') {
+      const projectName = urlParts[0];
+      return `https://recomeco-api-${projectName}.vercel.app`;
+    }
+  }
+
+  return 'https://recomeco-server.vercel.app';
+})();
 
 export const backupService = {
   async getLastBackup() {
