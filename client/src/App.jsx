@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from './services/api';
+import { getApiBase } from './services/getApiBase';
 import { backupService } from './services/backupService';
 import Dashboard from './pages/Dashboard';
 import People from './pages/People';
@@ -16,26 +17,46 @@ function ProtectedRoute({ children }) {
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const checkAuth = async () => {
-      const valid = await auth.verify();
-      setIsAuth(valid);
-      setChecking(false);
+      try {
+        const token = localStorage.getItem('recomeco_token');
+        if (!token) {
+          if (!cancelled) setChecking(false);
+          return;
+        }
+
+        const res = await fetch(`${getApiBase()}/api/auth/verify`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!cancelled) {
+          setIsAuth(res.ok);
+          setChecking(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsAuth(false);
+          setChecking(false);
+        }
+      }
     };
     checkAuth();
+    return () => { cancelled = true; };
   }, []);
 
   if (checking) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         minHeight: '100vh',
-        background: '#000' 
+        background: '#000'
       }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
+        <div style={{
+          width: '40px',
+          height: '40px',
           border: '4px solid #dc143c',
           borderTopColor: 'transparent',
           borderRadius: '50%',
@@ -55,18 +76,8 @@ function App() {
 
   useEffect(() => {
     setIsAuth(auth.isAuthenticated());
-    checkBackupPending();
+    backupService.checkPendingBackup(0, 0).then(setBackupPending).catch(() => {});
   }, []);
-
-  const checkBackupPending = async () => {
-    try {
-      const now = new Date();
-      const isPending = await backupService.checkPendingBackup(now.getMonth() + 1, now.getFullYear());
-      setBackupPending(isPending);
-    } catch (e) {
-      console.log('Erro ao verificar backup:', e);
-    }
-  };
 
   const handleLogout = () => {
     const token = localStorage.getItem('recomeco_token');

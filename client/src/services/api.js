@@ -93,9 +93,15 @@ export const auth = {
   async verify() {
     if (!authToken) return false;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
       const res = await fetch(`${getApiBase()}/api/auth/verify`, {
-        headers: { Authorization: `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
+        signal: controller.signal
       });
+
+      clearTimeout(timeout);
       return res.ok;
     } catch {
       return false;

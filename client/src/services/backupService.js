@@ -4,15 +4,25 @@ const API_BASE = getApiBase();
 
 export const backupService = {
   async getLastBackup() {
-    const res = await fetch(`${API_BASE}/api/backups/status`);
-    const data = await res.json();
-    return data.lastBackup || null;
+    try {
+      const res = await fetch(`${API_BASE}/api/backups/status`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.lastBackup || null;
+    } catch {
+      return null;
+    }
   },
 
   async checkPendingBackup(month, year) {
-    const res = await fetch(`${API_BASE}/api/backups/status`);
-    const data = await res.json();
-    return data.pendingAlert || false;
+    try {
+      const res = await fetch(`${API_BASE}/api/backups/status`);
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data.pendingAlert || false;
+    } catch {
+      return false;
+    }
   },
 
   async registerBackup(month, year, totalPeople, notes = '', exportedBy = '') {
