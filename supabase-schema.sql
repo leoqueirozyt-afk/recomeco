@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS people (
     disciple_status TEXT DEFAULT 'Em cuidado',
     final_decision TEXT DEFAULT 'Em acompanhamento',
     notes TEXT,
+    visitor_id UUID REFERENCES visitors(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -67,6 +68,7 @@ CREATE INDEX IF NOT EXISTS idx_people_disciple_status ON people(disciple_status)
 CREATE INDEX IF NOT EXISTS idx_people_first_decision ON people(first_decision);
 CREATE INDEX IF NOT EXISTS idx_people_baptized ON people(baptized);
 CREATE INDEX IF NOT EXISTS idx_people_created_at ON people(created_at);
+CREATE INDEX IF NOT EXISTS idx_people_visitor_id ON people(visitor_id);
 
 -- =============================================
 -- TABELA PEOPLE_MENTORS (Relacionamento)
@@ -149,6 +151,7 @@ SELECT
     p.disciple_status,
     p.final_decision,
     p.notes,
+    p.visitor_id,
     p.created_at,
     p.updated_at,
     STRING_AGG(DISTINCT m.full_name, ', ' ORDER BY m.full_name) AS mentors
@@ -156,6 +159,35 @@ FROM people p
 LEFT JOIN people_mentors pm ON p.id = pm.person_id
 LEFT JOIN mentors m ON pm.mentor_id = m.id AND m.active = true
 GROUP BY p.id;
+
+-- =============================================
+-- TABELA VISITORS (Visitantes)
+-- =============================================
+CREATE TABLE IF NOT EXISTS visitors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    visit_date DATE NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT,
+    whatsapp TEXT,
+    notes TEXT,
+    sent_to_recomeco BOOLEAN DEFAULT false,
+    recomeco_person_id UUID REFERENCES people(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitors_visit_date ON visitors(visit_date);
+CREATE INDEX IF NOT EXISTS idx_visitors_whatsapp ON visitors(whatsapp);
+CREATE INDEX IF NOT EXISTS idx_visitors_sent_to_recomeco ON visitors(sent_to_recomeco);
+
+DROP TRIGGER IF EXISTS update_visitors_updated_at ON visitors;
+CREATE TRIGGER update_visitors_updated_at
+    BEFORE UPDATE ON visitors
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE visitors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on visitors" ON visitors FOR ALL USING (true);
 
 -- =============================================
 -- POLICIES DE SEGURANÇA (Row Level Security)
@@ -174,3 +206,17 @@ CREATE POLICY "Allow all on backup_logs" ON backup_logs FOR ALL USING (true);
 -- Users table - apenas leitura para autenticação
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow auth on users" ON users FOR SELECT USING (true);
+
+-- =============================================
+-- ATUALIZAÇÕES PARA visitor_id em people
+-- (Adicionar coluna em databases existentes)
+-- =============================================
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'people' AND column_name = 'visitor_id') THEN
+        ALTER TABLE people ADD COLUMN visitor_id UUID REFERENCES visitors(id) ON DELETE SET NULL;
+    END IF;
+END
+$$;
+
+CREATE INDEX IF NOT EXISTS idx_people_visitor_id ON people(visitor_id);
