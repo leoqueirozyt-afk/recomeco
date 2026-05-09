@@ -1,11 +1,15 @@
+<<<<<<< Updated upstream
 // API usando backend Vercel
 const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
+=======
+import { getApiBase } from './getApiBase';
+>>>>>>> Stashed changes
 
 let authToken = localStorage.getItem('recomeco_token');
 
 export const api = {
   async get(endpoint) {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(`${getApiBase()}${endpoint}`, {
       headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
     });
     if (!res.ok) throw new Error('Erro na requisição');
@@ -14,7 +18,7 @@ export const api = {
 
   async post(endpoint, data) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
+      const res = await fetch(`${getApiBase()}${endpoint}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -34,7 +38,7 @@ export const api = {
   },
 
   async put(endpoint, data) {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(`${getApiBase()}${endpoint}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -47,7 +51,7 @@ export const api = {
   },
 
   async delete(endpoint) {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(`${getApiBase()}${endpoint}`, {
       method: 'DELETE',
       headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
     });
@@ -59,7 +63,7 @@ export const api = {
 export const auth = {
   async login(email, password) {
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${getApiBase()}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -94,7 +98,7 @@ export const auth = {
   async verify() {
     if (!authToken) return false;
     try {
-      const res = await fetch(`${API_BASE}/api/auth/verify`, {
+      const res = await fetch(`${getApiBase()}/api/auth/verify`, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       return res.ok;

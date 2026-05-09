@@ -1,4 +1,10 @@
+<<<<<<< Updated upstream
 const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
+=======
+import { getApiBase } from './getApiBase';
+
+const API_BASE = getApiBase();
+>>>>>>> Stashed changes
 
 export const backupService = {
   async getLastBackup() {
