@@ -1,24 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-<<<<<<< HEAD
 import { getApiBase } from '../services/getApiBase';
-=======
-
-function getApiBase() {
-  const configuredUrl = import.meta.env.VITE_API_URL;
-  if (configuredUrl) return configuredUrl;
-
-  const origin = window.location.origin;
-
-  if (origin.includes('.vercel.app') && !origin.includes('recomeco-nu') && !origin.includes('recomeco-server')) {
-    if (origin.startsWith('https://recomeco-git-')) {
-      return origin.replace('https://recomeco-git-', 'https://recomeco-api-git-');
-    }
-  }
-
-  return 'https://recomeco-server.vercel.app';
-}
->>>>>>> 1a10619d7e668d35703ebcdee57d698b73a6d05c
 
 const API_BASE = getApiBase();
 

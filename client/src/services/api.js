@@ -1,15 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-// API usando backend Vercel
-const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
-=======
 import { getApiBase } from './getApiBase';
->>>>>>> Stashed changes
-=======
-import { getApiBase } from './getApiBase';
-
-const API_BASE = getApiBase();
->>>>>>> 1a10619d7e668d35703ebcdee57d698b73a6d05c
 
 let authToken = localStorage.getItem('recomeco_token');
 
@@ -26,7 +15,7 @@ export const api = {
     try {
       const res = await fetch(`${getApiBase()}${endpoint}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
         },
@@ -46,7 +35,7 @@ export const api = {
   async put(endpoint, data) {
     const res = await fetch(`${getApiBase()}${endpoint}`, {
       method: 'PUT',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
       },
@@ -74,13 +63,13 @@ export const auth = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      
+
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data.error || 'Credenciais inválidas');
       }
-      
+
       authToken = data.token;
       localStorage.setItem('recomeco_token', data.token);
       return data;
@@ -130,7 +119,7 @@ export const deleteMentor = (id) => api.delete(`/api/mentors/${id}`);
 export const getVisitors = () => api.get('/api/visitors');
 export const getVisitor = (id) => api.get(`/api/visitors/${id}`);
 export const createVisitor = (data) => api.post('/api/visitors', data);
-export const updateVisitor = (id, data) => api.put('/api/visitors/${id}', data);
-export const deleteVisitor = (id) => api.delete('/api/visitors/${id}');
+export const updateVisitor = (id, data) => api.put(`/api/visitors/${id}`, data);
+export const deleteVisitor = (id) => api.delete(`/api/visitors/${id}`);
 export const completeVisitorRegistration = (visitorId, data) => api.post(`/api/visitors/${visitorId}/complete-registration`, data);
 export const sendVisitorToRecomeco = (id) => api.post(`/api/visitors/${id}/send-to-recomeco`, {});

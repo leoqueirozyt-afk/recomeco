@@ -1,27 +1,6 @@
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
-=======
 import { getApiBase } from './getApiBase';
 
 const API_BASE = getApiBase();
->>>>>>> Stashed changes
-=======
-const API_BASE = (() => {
-  const configuredUrl = import.meta.env.VITE_API_URL;
-  if (configuredUrl) return configuredUrl;
-
-  const origin = window.location.origin;
-
-  if (origin.includes('.vercel.app') && !origin.includes('recomeco-nu') && !origin.includes('recomeco-server')) {
-    if (origin.startsWith('https://recomeco-git-')) {
-      return origin.replace('https://recomeco-git-', 'https://recomeco-api-git-');
-    }
-  }
-
-  return 'https://recomeco-server.vercel.app';
-})();
->>>>>>> 1a10619d7e668d35703ebcdee57d698b73a6d05c
 
 export const backupService = {
   async getLastBackup() {
@@ -61,59 +40,6 @@ export const backupService = {
     link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
-  },
-
-  async exportVisitorsCSV() {
-    const res = await fetch(`${API_BASE}/api/backups/export/visitors/csv`);
-    if (!res.ok) throw new Error('Erro ao exportar visitantes');
-    return res.blob();
-  },
-
-  downloadVisitorsCSV(blob, month, year) {
-    const filename = `recomeco-visitantes-${String(month).padStart(2, '0')}-${year}.csv`;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  },
-
-  downloadCSV(content, month, year) {
-    const filename = `recomeco-backup-${String(month).padStart(2, '0')}-${year}.csv`;
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  },
-
-  async exportExcel() {
-    const res = await fetch(`${API_BASE}/api/people`);
-    const people = await res.json();
-
-    const data = people.map(person => ({
-      'Data da decisão': person.decisionDate || '',
-      'Mês da decisão': person.decisionMonth || '',
-      'Nome completo': person.fullName || '',
-      'Data de nascimento': person.birthDate || '',
-      'Endereço completo': person.fullAddress || '',
-      'Contato': person.contact || '',
-      'Sexo': person.gender || '',
-      'Batizado': person.baptized || '',
-      'Primeira decisão': person.firstDecision || '',
-      'Status': person.discipleStatus || '',
-      'Decisão final': person.finalDecision || '',
-      'Responsáveis': person.mentors || '',
-      'Observações': person.notes || '',
-      'Data de criação': person.createdAt || '',
-      'Data de atualização': person.updatedAt || ''
-    }));
-
-    return { data, filename: 'Backup' };
   },
 
   async exportVisitorsCSV() {
