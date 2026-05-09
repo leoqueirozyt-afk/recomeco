@@ -4,12 +4,7 @@
   "description": "Sistema de acompanhamento do Ministério Recomeço",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd server && node src/server.js",
-    "client": "cd client && npm run dev",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "dev": "cd client && npm run dev",
+    "install:all": "npm install && cd api && npm install && cd ../client && npm install"
   }
 }

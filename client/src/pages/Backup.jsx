@@ -67,12 +67,12 @@ function Backup() {
   const handleExportCSV = async () => {
     setExporting(true);
     try {
-      const csvContent = await backupService.exportCSV();
+      const blob = await backupService.exportCSV();
       const now = new Date();
       const month = now.getMonth() + 1;
       const year = now.getFullYear();
-      
-      backupService.downloadCSV(csvContent, month, year);
+
+      backupService.downloadCSV(blob, month, year);
       alert('Backup CSV exportado com sucesso! Agora registre o backup.');
     } catch (error) {
       console.error('Erro ao exportar:', error);
@@ -103,20 +103,56 @@ function Backup() {
     const confirmed = window.confirm(
       'Você já exportou e salvou o backup deste mês em local seguro?'
     );
-    
+
     if (!confirmed) return;
 
     try {
       const now = new Date();
       const month = now.getMonth() + 1;
       const year = now.getFullYear();
-      
+
       await backupService.registerBackup(month, year, 0, 'Backup manual');
       await checkBackupStatus();
       alert('Backup registrado com sucesso!');
     } catch (error) {
       console.error('Erro ao registrar:', error);
       alert('Erro ao registrar: ' + error.message);
+    }
+  };
+
+  const handleExportVisitorsCSV = async () => {
+    setExporting(true);
+    try {
+      const blob = await backupService.exportVisitorsCSV();
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+
+      backupService.downloadVisitorsCSV(blob, month, year);
+      alert('Backup de visitantes exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      alert('Erro ao exportar: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportVisitorsExcel = async () => {
+    setExporting(true);
+    try {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+
+      const blob = await backupService.exportVisitorsExcel();
+      backupService.downloadVisitorsExcel(blob, month, year);
+      alert('Backup de visitantes exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      alert('Erro ao exportar: ' + error.message);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -167,8 +203,8 @@ function Backup() {
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '24px' }}>
         <div className="stat-card">
           <div className="stat-label">CSV</div>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={handleExportCSV}
             disabled={exporting}
             style={{ marginTop: '12px', width: '100%' }}
@@ -178,8 +214,8 @@ function Backup() {
         </div>
         <div className="stat-card">
           <div className="stat-label">Excel</div>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={handleExportExcel}
             disabled={exporting}
             style={{ marginTop: '12px', width: '100%' }}
@@ -189,12 +225,32 @@ function Backup() {
         </div>
         <div className="stat-card">
           <div className="stat-label">Registro</div>
-          <button 
-            className="btn btn-secondary" 
+          <button
+            className="btn btn-secondary"
             onClick={handleRegisterBackup}
             style={{ marginTop: '12px', width: '100%' }}
           >
             ✓ Registrar Backup
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <h3 style={{ marginBottom: '16px', color: 'var(--primary)' }}>Exportar Visitantes</h3>
+        <div className="btn-group">
+          <button
+            className="btn btn-secondary"
+            onClick={handleExportVisitorsCSV}
+            disabled={exporting}
+          >
+            📄 CSV Visitantes
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleExportVisitorsExcel}
+            disabled={exporting}
+          >
+            📊 Excel Visitantes
           </button>
         </div>
       </div>

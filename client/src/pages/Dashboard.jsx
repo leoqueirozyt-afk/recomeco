@@ -66,6 +66,25 @@ function Dashboard() {
         </div>
       </div>
 
+      <div className="stats-grid" style={{ marginBottom: '24px' }}>
+        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)' }}>
+          <div className="stat-label" style={{ color: 'rgba(255,255,255,0.9)' }}>Visitantes Hoje</div>
+          <div className="stat-value" style={{ color: '#fff' }}>{data?.visitorsToday || 0}</div>
+        </div>
+        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)' }}>
+          <div className="stat-label" style={{ color: 'rgba(255,255,255,0.9)' }}>Total Visitantes</div>
+          <div className="stat-value" style={{ color: '#fff' }}>{data?.totalVisitors || 0}</div>
+        </div>
+        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)' }}>
+          <div className="stat-label" style={{ color: 'rgba(255,255,255,0.9)' }}>Aguardando Acomp.</div>
+          <div className="stat-value" style={{ color: '#fff' }}>{data?.visitorsNotSent || 0}</div>
+        </div>
+        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #2980b9 0%, #1a5276 100%)' }}>
+          <div className="stat-label" style={{ color: 'rgba(255,255,255,0.9)' }}>Em Acompanhamento</div>
+          <div className="stat-value" style={{ color: '#fff' }}>{data?.visitorsSent || 0}</div>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '20px' }}>
         <div className="chart-card">
           <div className="chart-title">Por Status</div>

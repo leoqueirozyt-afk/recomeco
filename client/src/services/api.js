@@ -1,5 +1,6 @@
-// API usando backend Vercel
-const API_BASE = import.meta.env.VITE_API_URL || 'https://recomeco-server.vercel.app';
+import { getApiBase } from './getApiBase';
+
+const API_BASE = getApiBase();
 
 let authToken = localStorage.getItem('recomeco_token');
 
@@ -116,3 +117,11 @@ export const getMentor = (id) => api.get(`/api/mentors/${id}`);
 export const createMentor = (data) => api.post('/api/mentors', data);
 export const updateMentor = (id, data) => api.put(`/api/mentors/${id}`, data);
 export const deleteMentor = (id) => api.delete(`/api/mentors/${id}`);
+
+export const getVisitors = () => api.get('/api/visitors');
+export const getVisitor = (id) => api.get(`/api/visitors/${id}`);
+export const createVisitor = (data) => api.post('/api/visitors', data);
+export const updateVisitor = (id, data) => api.put('/api/visitors/${id}', data);
+export const deleteVisitor = (id) => api.delete('/api/visitors/${id}');
+export const completeVisitorRegistration = (visitorId, data) => api.post(`/api/visitors/${visitorId}/complete-registration`, data);
+export const sendVisitorToRecomeco = (id) => api.post(`/api/visitors/${id}/send-to-recomeco`, {});

@@ -8,6 +8,8 @@ import PersonForm from './pages/PersonForm';
 import Mentors from './pages/Mentors';
 import Login from './pages/Login';
 import Backup from './pages/Backup';
+import Visitors from './pages/Visitors';
+import PublicVisitorRegistration from './pages/PublicVisitorRegistration';
 
 function ProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
@@ -93,6 +95,7 @@ function App() {
         <Route path="/login" element={
           auth.isAuthenticated() ? <Navigate to="/" replace /> : <Login />
         } />
+        <Route path="/cadastro-visitante" element={<PublicVisitorRegistration />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <div className="app-container">
@@ -122,6 +125,12 @@ function App() {
                       <NavLink to="/people" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
                         <span className="nav-icon">👥</span>
                         Pessoas
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
+                      <NavLink to="/visitors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
+                        <span className="nav-icon">👋</span>
+                        Visitantes
                       </NavLink>
                     </li>
                     <li className="nav-item">
@@ -158,6 +167,7 @@ function App() {
                   <Route path="/people/new" element={<PersonForm />} />
                   <Route path="/people/:id" element={<PersonForm />} />
                   <Route path="/mentors" element={<Mentors />} />
+                  <Route path="/visitors" element={<Visitors />} />
                   <Route path="/backup" element={<Backup />} />
                 </Routes>
               </main>
