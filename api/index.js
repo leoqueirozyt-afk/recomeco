@@ -300,6 +300,13 @@ function mapMember(row, detailed = false) {
     birthDate: row.birth_date,
     phone: row.phone,
     fullAddress: row.full_address,
+    zipCode: row.zip_code,
+    street: row.street,
+    addressNumber: row.address_number,
+    addressComplement: row.address_complement,
+    neighborhood: row.neighborhood,
+    city: row.city,
+    state: row.state,
     memberStatus: row.member_status,
     careStatus: row.care_status,
     source: row.source,
@@ -385,7 +392,8 @@ app.post('/api/public/members', requireSupabase, async (req, res) => {
     const { member_type, full_name, cpf, birth_date, phone, full_address,
       marital_status, gds, is_leadership, baptized, allergy,
       responsible_name, responsible_contact, child_gds, child_allergy,
-      notes } = req.body;
+      notes, zip_code, street, address_number, address_complement,
+      neighborhood, city, state } = req.body;
 
     console.log('Public member registration received:', sanitizeMemberLog(req.body));
 
@@ -407,6 +415,13 @@ app.post('/api/public/members', requireSupabase, async (req, res) => {
       last_name: null,
       birth_date: birth_date || null,
       phone: phone || null,
+      zip_code: zip_code || null,
+      street: street || null,
+      address_number: address_number || null,
+      address_complement: address_complement || null,
+      neighborhood: neighborhood || null,
+      city: city || null,
+      state: state || null,
       full_address: full_address || null,
       member_status: 'Ativo',
       care_status: 'Sem cuidado ativo',
@@ -877,7 +892,7 @@ app.get('/api/backups/export/members/csv', requireSupabase, async (req, res) => 
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = now.getFullYear();
 
-    const csvRows = [['Tipo', 'Nome completo', 'CPF', 'Data nascimento', 'Estado civil', 'Endereço', 'Telefone', 'GDS', 'Liderança', 'Batizado', 'Alergia', 'Responsável', 'Contato responsável', 'Status membro', 'Status cuidado', 'Origem', 'Observações', 'Criado em', 'Atualizado em']];
+    const csvRows = [['Tipo', 'Nome completo', 'CPF', 'Data nascimento', 'Estado civil', 'Telefone', 'GDS', 'Liderança', 'Batizado', 'Alergia', 'Responsável', 'Contato responsável', 'Status membro', 'Status cuidado', 'Origem', 'CEP', 'Rua', 'Número', 'Complemento', 'Bairro', 'Cidade', 'UF', 'Observações', 'Criado em', 'Atualizado em']];
 
     for (const m of members || []) {
       csvRows.push([
@@ -886,8 +901,7 @@ app.get('/api/backups/export/members/csv', requireSupabase, async (req, res) => 
         m.cpf || '',
         m.birth_date || '',
         m.member_type === 'Adulto' ? (m.marital_status || '') : '',
-        m.full_address || '',
-        m.member_type === 'Adulto' ? (m.phone || '') : '',
+        m.member_type === 'Adulto' ? (m.phone || '') : (m.responsible_contact || ''),
         m.gds || m.child_gds || '',
         m.is_leadership ? 'Sim' : 'Não',
         m.baptized ? 'Sim' : 'Não',
@@ -897,6 +911,13 @@ app.get('/api/backups/export/members/csv', requireSupabase, async (req, res) => 
         m.member_status || '',
         m.care_status || '',
         m.source || '',
+        m.zip_code || '',
+        m.street || '',
+        m.address_number || '',
+        m.address_complement || '',
+        m.neighborhood || '',
+        m.city || '',
+        m.state || '',
         m.notes || '',
         m.created_at || '',
         m.updated_at || ''
@@ -1316,7 +1337,9 @@ app.post('/api/members', requireSupabase, authenticateToken, async (req, res) =>
     const { member_type, full_name, cpf, birth_date, phone, full_address,
       marital_status, gds, is_leadership, baptized, allergy,
       responsible_name, responsible_contact, child_gds, child_allergy,
-      member_status, care_status, source, person_id, visitor_id, notes } = req.body;
+      member_status, care_status, source, person_id, visitor_id, notes,
+      zip_code, street, address_number, address_complement,
+      neighborhood, city, state } = req.body;
 
     console.log('Creating member:', sanitizeMemberLog(req.body));
 
@@ -1340,6 +1363,13 @@ app.post('/api/members', requireSupabase, authenticateToken, async (req, res) =>
       birth_date: birth_date || null,
       phone: phone || null,
       full_address: full_address || null,
+      zip_code: zip_code || null,
+      street: street || null,
+      address_number: address_number || null,
+      address_complement: address_complement || null,
+      neighborhood: neighborhood || null,
+      city: city || null,
+      state: state || null,
       member_status: member_status || 'Ativo',
       care_status: care_status || 'Sem cuidado ativo',
       source: source || 'Cadastro interno',
@@ -1381,7 +1411,9 @@ app.put('/api/members/:id', requireSupabase, authenticateToken, async (req, res)
     const { member_type, full_name, cpf, birth_date, phone, full_address,
       marital_status, gds, is_leadership, baptized, allergy,
       responsible_name, responsible_contact, child_gds, child_allergy,
-      member_status, care_status, source, person_id, visitor_id, notes } = req.body;
+      member_status, care_status, source, person_id, visitor_id, notes,
+      zip_code, street, address_number, address_complement,
+      neighborhood, city, state } = req.body;
 
     console.log('Updating member:', req.params.id);
 
@@ -1405,6 +1437,13 @@ app.put('/api/members/:id', requireSupabase, authenticateToken, async (req, res)
       birth_date: birth_date || null,
       phone: phone || null,
       full_address: full_address || null,
+      zip_code: zip_code || null,
+      street: street || null,
+      address_number: address_number || null,
+      address_complement: address_complement || null,
+      neighborhood: neighborhood || null,
+      city: city || null,
+      state: state || null,
       member_status: member_status || 'Ativo',
       care_status: care_status || 'Sem cuidado ativo',
       source: source || 'Cadastro interno',
