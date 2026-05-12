@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPeople, deletePerson } from '../services/api';
+import { getPeople, deletePerson, becomeMember, getMembers } from '../services/api';
 
 const FIRST_DECISIONS = ['Aceitou Jesus', 'Reconciliação', 'Visitante', 'Pedido de oração', 'Outro'];
 const STATUS_OPTIONS = ['Em cuidado', 'Aguardando decisão', 'Discípulo', 'Visitante'];
@@ -15,6 +15,11 @@ function People() {
   const [filterDecision, setFilterDecision] = useState('');
   const [filterBaptized, setFilterBaptized] = useState('');
   const [deleteId, setDeleteId] = useState(null);
+  const [becomeMemberId, setBecomeMemberId] = useState(null);
+  const [becomeMemberLoading, setBecomeMemberLoading] = useState(false);
+  const [memberAlreadyExists, setMemberAlreadyExists] = useState(false);
+  const [becomeMemberSuccess, setBecomeMemberSuccess] = useState(false);
+  const [memberIds, setMemberIds] = useState(new Set());
 
   useEffect(() => {
     loadPeople();
@@ -22,8 +27,13 @@ function People() {
 
   const loadPeople = async () => {
     try {
-      const result = await getPeople();
-      setPeople(result);
+      const [peopleResult, membersResult] = await Promise.all([
+        getPeople(),
+        getMembers({ status: 'Ativo' })
+      ]);
+      setPeople(peopleResult);
+      const ids = new Set(membersResult.filter(m => m.personId).map(m => m.personId));
+      setMemberIds(ids);
     } catch (error) {
       console.error('Erro ao carregar pessoas:', error);
     } finally {
@@ -39,6 +49,31 @@ function People() {
     } catch (error) {
       console.error('Erro ao excluir:', error);
     }
+  };
+
+  const handleBecomeMember = async () => {
+    setBecomeMemberLoading(true);
+    setMemberAlreadyExists(false);
+    setBecomeMemberSuccess(false);
+    try {
+      await becomeMember(becomeMemberId);
+      setBecomeMemberSuccess(true);
+      loadPeople();
+    } catch (error) {
+      if (error.message && error.message.includes('já está cadastrada')) {
+        setMemberAlreadyExists(true);
+      } else {
+        console.error('Erro ao criar membro:', error);
+      }
+    } finally {
+      setBecomeMemberLoading(false);
+    }
+  };
+
+  const openBecomeMember = (personId) => {
+    setBecomeMemberId(personId);
+    setBecomeMemberSuccess(false);
+    setMemberAlreadyExists(false);
   };
 
   const filteredPeople = people.filter(person => {
@@ -164,9 +199,9 @@ function People() {
               )}
               <div className="person-actions">
                 {person.contact && (
-                  <a 
-                    href={`https://wa.me/${person.contact.replace(/\D/g, '')}`} 
-                    target="_blank" 
+                  <a
+                    href={`https://wa.me/${person.contact.replace(/\D/g, '')}`}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-whatsapp btn-sm"
                   >
@@ -176,6 +211,15 @@ function People() {
                 <Link to={`/people/${person.id}`} className="btn btn-secondary btn-sm">
                   Editar
                 </Link>
+                {memberIds.has(person.id) ? (
+                  <Link to="/members" className="btn btn-primary btn-sm">
+                    Ver membro
+                  </Link>
+                ) : (
+                  <button className="btn btn-primary btn-sm" onClick={() => openBecomeMember(person.id)}>
+                    Tornar Membro
+                  </button>
+                )}
                 <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(person.id)}>
                   Excluir
                 </button>
@@ -200,6 +244,58 @@ function People() {
                 Cancelar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {becomeMemberId && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2 className="modal-title">Tornar Membro</h2>
+            </div>
+            {memberAlreadyExists ? (
+              <>
+                <p style={{ marginBottom: '16px', color: '#e67e22' }}>
+                  Esta pessoa já está cadastrada como membro.
+                </p>
+                <Link to="/members" className="btn btn-primary">
+                  Ver em Membros
+                </Link>
+              </>
+            ) : becomeMemberSuccess ? (
+              <>
+                <p style={{ marginBottom: '16px', color: '#27ae60', fontWeight: '600' }}>
+                  Pessoa adicionada à lista de membros com sucesso.
+                </p>
+                <Link to="/members" className="btn btn-primary">
+                  Ver em Membros
+                </Link>
+              </>
+            ) : (
+              <>
+                <p style={{ marginBottom: '24px' }}>
+                  Deseja tornar esta pessoa um membro da igreja?
+                </p>
+                <div className="btn-group">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleBecomeMember}
+                    disabled={becomeMemberLoading}
+                  >
+                    {becomeMemberLoading ? 'Criando...' : 'Sim, tornar membro'}
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setBecomeMemberId(null)}>
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
+            {(memberAlreadyExists || becomeMemberSuccess) && (
+              <button className="btn btn-secondary" style={{ marginTop: '12px' }} onClick={() => setBecomeMemberId(null)}>
+                Fechar
+              </button>
+            )}
           </div>
         </div>
       )}

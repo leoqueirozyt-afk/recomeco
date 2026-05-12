@@ -1135,6 +1135,64 @@ app.post('/api/visitors/:id/complete-registration', requireSupabase, async (req,
 });
 
 // =============================================
+// PEOPLE → MEMBERS INTEGRATION
+// =============================================
+app.post('/api/people/:id/become-member', requireSupabase, authenticateToken, async (req, res) => {
+  try {
+    const personId = req.params.id;
+
+    const { data: person, error: personError } = await supabase
+      .from('people')
+      .select('*')
+      .eq('id', personId)
+      .single();
+
+    if (personError || !person) {
+      return res.status(404).json({ ok: false, error: 'Pessoa não encontrada.' });
+    }
+
+    const { data: existing } = await supabase
+      .from('members')
+      .select('id')
+      .eq('person_id', personId)
+      .maybeSingle();
+
+    if (existing) {
+      return res.status(409).json({ ok: false, error: 'Esta pessoa já está cadastrada como membro.' });
+    }
+
+    const { data: member, error: memberError } = await supabase
+      .from('members')
+      .insert({
+        member_type: 'Adulto',
+        full_name: person.full_name,
+        birth_date: person.birth_date || null,
+        phone: person.contact || null,
+        full_address: person.full_address || null,
+        baptized: person.baptized || false,
+        person_id: person.id,
+        source: 'Veio do Recomeço',
+        member_status: 'Ativo',
+        care_status: 'Acompanhamento finalizado',
+        notes: 'Membro criado a partir do acompanhamento do Recomeço.'
+      })
+      .select()
+      .single();
+
+    if (memberError) throw memberError;
+
+    res.status(201).json({
+      ok: true,
+      message: 'Pessoa adicionada à lista de membros com sucesso.',
+      member: mapMember(member, true)
+    });
+  } catch (error) {
+    console.error('Error in become-member:', error.message);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// =============================================
 // MEMBERS ROUTES (authenticated)
 // =============================================
 app.get('/api/members', requireSupabase, async (req, res) => {
