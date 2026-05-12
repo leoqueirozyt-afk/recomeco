@@ -156,6 +156,40 @@ function Backup() {
     }
   };
 
+  const handleExportMembersCSV = async () => {
+    setExporting(true);
+    try {
+      const blob = await backupService.exportMembersCSV();
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      backupService.downloadMembersCSV(blob, month, year);
+      alert('Backup de membros exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      alert('Erro ao exportar: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportBirthdaysCSV = async () => {
+    setExporting(true);
+    try {
+      const blob = await backupService.exportBirthdaysCSV();
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      backupService.downloadBirthdaysCSV(blob, month, year);
+      alert('Backup de aniversariantes exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      alert('Erro ao exportar: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="empty-state">Carregando...</div>;
   }
@@ -251,6 +285,26 @@ function Backup() {
             disabled={exporting}
           >
             📊 Excel Visitantes
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <h3 style={{ marginBottom: '16px', color: 'var(--primary)' }}>Exportar Membros</h3>
+        <div className="btn-group">
+          <button
+            className="btn btn-secondary"
+            onClick={handleExportMembersCSV}
+            disabled={exporting}
+          >
+            📄 CSV Membros
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={handleExportBirthdaysCSV}
+            disabled={exporting}
+          >
+            🎂 CSV Aniversariantes
           </button>
         </div>
       </div>

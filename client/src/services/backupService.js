@@ -88,5 +88,37 @@ export const backupService = {
     this.exportVisitorsExcel().then(blob => {
       this.downloadVisitorsExcel(blob, month, year);
     });
+  },
+
+  async exportMembersCSV() {
+    const res = await fetch(`${API_BASE}/api/backups/export/members/csv`);
+    if (!res.ok) throw new Error('Erro ao exportar membros');
+    return res.blob();
+  },
+
+  downloadMembersCSV(blob, month, year) {
+    const filename = `recomeco-membros-${String(month).padStart(2, '0')}-${year}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  async exportBirthdaysCSV() {
+    const res = await fetch(`${API_BASE}/api/backups/export/birthdays/csv`);
+    if (!res.ok) throw new Error('Erro ao exportar aniversariantes');
+    return res.blob();
+  },
+
+  downloadBirthdaysCSV(blob, month, year) {
+    const filename = `recomeco-aniversariantes-${String(month).padStart(2, '0')}-${year}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 };

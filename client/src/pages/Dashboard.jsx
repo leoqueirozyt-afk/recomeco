@@ -85,6 +85,41 @@ function Dashboard() {
         </div>
       </div>
 
+      <div className="stats-grid" style={{ marginBottom: '24px' }}>
+        <div className="stat-card">
+          <div className="stat-label">Membros Ativos</div>
+          <div className="stat-value">{data?.totalMembers || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Membros Inativos</div>
+          <div className="stat-value">{data?.totalMembersInactive || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Adultos</div>
+          <div className="stat-value">{data?.activeAdults || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Crianças</div>
+          <div className="stat-value">{data?.activeChildren || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Em Cuidado</div>
+          <div className="stat-value">{data?.membersInCare || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Aniversariantes</div>
+          <div className="stat-value">{data?.birthdayMembers || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Batizados</div>
+          <div className="stat-value">{data?.baptizedMembers || 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Liderança</div>
+          <div className="stat-value">{data?.leadershipMembers || 0}</div>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '20px' }}>
         <div className="chart-card">
           <div className="chart-title">Por Status</div>

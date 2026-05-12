@@ -702,6 +702,22 @@ app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
     const visitorsNotSent = visitorsAll.filter(v => !v.sent_to_recomeco).length;
     const visitorsSent = visitorsAll.filter(v => v.sent_to_recomeco).length;
 
+    // Members stats
+    const { data: members } = await supabase.from('members').select('*');
+    const membersAll = members || [];
+    const activeMembers = membersAll.filter(m => m.member_status === 'Ativo');
+    const inactiveMembers = membersAll.filter(m => m.member_status === 'Inativo');
+    const activeAdults = activeMembers.filter(m => m.member_type === 'Adulto');
+    const activeChildren = activeMembers.filter(m => m.member_type === 'Criança');
+    const inCareMembers = activeMembers.filter(m => m.care_status === 'Em cuidado pelo Recomeço');
+    const baptizedMembers = activeMembers.filter(m => m.baptized);
+    const leadershipMembers = activeMembers.filter(m => m.is_leadership);
+    const currentMonthBd = String(now.getMonth() + 1).padStart(2, '0');
+    const birthdayMembers = activeMembers.filter(m => {
+      if (!m.birth_date) return false;
+      return String(m.birth_date).includes(`-${currentMonthBd}-`);
+    });
+
     const { data: recentPeople } = await supabase
       .from('people')
       .select('*')
@@ -737,6 +753,14 @@ app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
     res.json({
       total, inCare, awaitingDecision, disciple, visitor, baptized, notBaptized, withoutMentor,
       totalVisitors, visitorsToday, thisMonthVisitors, visitorsNotSent, visitorsSent,
+      totalMembers: activeMembers.length,
+      totalMembersInactive: inactiveMembers.length,
+      activeAdults: activeAdults.length,
+      activeChildren: activeChildren.length,
+      membersInCare: inCareMembers.length,
+      birthdayMembers: birthdayMembers.length,
+      baptizedMembers: baptizedMembers.length,
+      leadershipMembers: leadershipMembers.length,
       byStatus, byMonth, byFirstDecision, byGender,
       recentPeople: (recentPeople || []).map(mapPerson)
     });
@@ -833,64 +857,104 @@ app.get('/api/backups/export/csv', requireSupabase, async (req, res) => {
     const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=recomeco-acompanhamento-${month}-${year}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=recomeco-visitantes-${month}-${year}.csv`);
     res.send(csv);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/backups/export/xlsx', requireSupabase, async (req, res) => {
+app.get('/api/backups/export/members/csv', requireSupabase, async (req, res) => {
   try {
-    const { data: people, error } = await supabase
-      .from('v_people_with_mentors')
-      .select('*');
-    
+    const { data: members, error } = await supabase
+      .from('members')
+      .select('*')
+      .order('full_name', { ascending: true });
+
     if (error) throw error;
 
-    const rows = (people || []).map(p => ({
-      ID: p.id,
-      Nome: p.full_name,
-      'Data Decisão': p.decision_date,
-      'Mês Decisão': p.decision_month,
-      'Data Nascimento': p.birth_date,
-      Endereço: p.full_address,
-      Contato: p.contact,
-      Gênero: p.gender,
-      Batizado: p.baptized ? 'Sim' : 'Não',
-      'Primeira Decisão': p.first_decision,
-      Status: p.disciple_status,
-      'Decisão Final': p.final_decision,
-      Anotações: p.notes,
-      Responsáveis: p.mentors,
-      'Criado em': p.created_at,
-      'Atualizado em': p.updated_at
-    }));
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
 
-    const { data: visitors } = await supabase.from('visitors').select('*');
-    const visitorsRows = (visitors || []).map(v => ({
-      'Data da visita': v.visit_date || '',
-      Nome: v.first_name || '',
-      Sobrenome: v.last_name || '',
-      WhatsApp: v.whatsapp || '',
-      Observações: v.notes || '',
-      'Entrou em acompanhamento': v.sent_to_recomeco ? 'Sim' : 'Não',
-      'ID Cadastro Completo': v.recomeco_person_id || '',
-      'Data de criação': v.created_at || '',
-      'Data de atualização': v.updated_at || ''
-    }));
+    const csvRows = [['Tipo', 'Nome completo', 'CPF', 'Data nascimento', 'Estado civil', 'Endereço', 'Telefone', 'GDS', 'Liderança', 'Batizado', 'Alergia', 'Responsável', 'Contato responsável', 'Status membro', 'Status cuidado', 'Origem', 'Observações', 'Criado em', 'Atualizado em']];
 
-    const ws1 = XLSX.utils.json_to_sheet(rows);
-    const ws2 = XLSX.utils.json_to_sheet(visitorsRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws1, 'Acompanhamento');
-    XLSX.utils.book_append_sheet(wb, ws2, 'Visitantes');
-    
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=recomeco-backup.xlsx');
-    res.send(buffer);
+    for (const m of members || []) {
+      csvRows.push([
+        m.member_type || '',
+        m.full_name || '',
+        m.cpf || '',
+        m.birth_date || '',
+        m.member_type === 'Adulto' ? (m.marital_status || '') : '',
+        m.full_address || '',
+        m.member_type === 'Adulto' ? (m.phone || '') : '',
+        m.gds || m.child_gds || '',
+        m.is_leadership ? 'Sim' : 'Não',
+        m.baptized ? 'Sim' : 'Não',
+        m.allergy || m.child_allergy || '',
+        m.member_type === 'Criança' ? (m.responsible_name || '') : '',
+        m.member_type === 'Criança' ? (m.responsible_contact || '') : '',
+        m.member_status || '',
+        m.care_status || '',
+        m.source || '',
+        m.notes || '',
+        m.created_at || '',
+        m.updated_at || ''
+      ]);
+    }
+
+    const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=recomeco-membros-${month}-${year}.csv`);
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/backups/export/birthdays/csv', requireSupabase, async (req, res) => {
+  try {
+    const { data: members, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('member_status', 'Ativo')
+      .order('full_name', { ascending: true });
+
+    if (error) throw error;
+
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+
+    const currentMonthBd = String(now.getMonth() + 1).padStart(2, '0');
+    const birthdayMembers = (members || []).filter(m => m.birth_date && String(m.birth_date).includes(`-${currentMonthBd}-`)).sort((a, b) => {
+      const aDay = parseInt(a.birth_date.split('-').pop(), 10);
+      const bDay = parseInt(b.birth_date.split('-').pop(), 10);
+      return aDay - bDay;
+    });
+
+    const csvRows = [['Tipo', 'Nome completo', 'Data nascimento', 'Dia', 'Telefone', 'Responsável', 'GDS', 'Alergia', 'Status membro']];
+
+    for (const m of birthdayMembers) {
+      csvRows.push([
+        m.member_type || '',
+        m.full_name || '',
+        m.birth_date || '',
+        m.birth_date ? parseInt(m.birth_date.split('-').pop(), 10) : '',
+        m.member_type === 'Adulto' ? (m.phone || '') : (m.responsible_contact || ''),
+        m.member_type === 'Criança' ? (m.responsible_name || '') : '',
+        m.gds || m.child_gds || '',
+        m.allergy || m.child_allergy || '',
+        m.member_status || ''
+      ]);
+    }
+
+    const csv = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=recomeco-aniversariantes-${month}-${year}.csv`);
+    res.send(csv);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
