@@ -94,7 +94,7 @@ function People() {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Pessoas Cadastradas</h1>
+        <h1 className="page-title">Recomeço</h1>
         <p className="page-subtitle">{filteredPeople.length} pessoa(s) encontrada(s)</p>
       </div>
 

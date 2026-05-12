@@ -101,8 +101,8 @@ function App() {
                 <nav>
                   <ul className="nav-menu">
                     <li className="nav-item">
-                      <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
-                        <span className="nav-icon">👑</span>Líderes
+                      <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
+                        <span className="nav-icon">📊</span>Dashboard
                       </NavLink>
                     </li>
                     <li className="nav-item">
@@ -116,18 +116,13 @@ function App() {
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
-                        <span className="nav-icon">📊</span>Dashboard
+                      <NavLink to="/visitors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
+                        <span className="nav-icon">👋</span>Visitantes
                       </NavLink>
                     </li>
                     <li className="nav-item">
                       <NavLink to="/people" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">👥</span>Pessoas
-                      </NavLink>
-                    </li>
-                    <li className="nav-item">
-                      <NavLink to="/visitors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">👋</span>Visitantes
+                        <span className="nav-icon">🔄</span>Recomeço
                       </NavLink>
                     </li>
                     <li className="nav-item">
