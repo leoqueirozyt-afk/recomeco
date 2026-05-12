@@ -13,6 +13,7 @@ import Backup from './pages/Backup';
 import Visitors from './pages/Visitors';
 import PublicVisitorRegistration from './pages/PublicVisitorRegistration';
 import PublicMemberRegistration from './pages/PublicMemberRegistration';
+import Birthdays from './pages/Birthdays';
 
 function ProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
@@ -110,6 +111,11 @@ function App() {
                       </NavLink>
                     </li>
                     <li className="nav-item">
+                      <NavLink to="/birthdays" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
+                        <span className="nav-icon">🎂</span>Aniversariantes
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
                       <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
                         <span className="nav-icon">📊</span>Dashboard
                       </NavLink>
@@ -156,6 +162,7 @@ function App() {
                   <Route path="/people/:id" element={<PersonForm />} />
                   <Route path="/mentors" element={<Mentors />} />
                   <Route path="/members" element={<Members />} />
+                  <Route path="/birthdays" element={<Birthdays />} />
                   <Route path="/visitors" element={<Visitors />} />
                   <Route path="/backup" element={<Backup />} />
                 </Routes>
