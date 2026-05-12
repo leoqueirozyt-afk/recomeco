@@ -74,6 +74,19 @@ export const api = {
     return res.json();
   },
 
+  async patch(endpoint, data) {
+    const res = await fetch(`${getApiBase()}${endpoint}`, {
+      method: 'PATCH',
+      headers: buildHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Erro na requisição' }));
+      throw new Error(err.error || 'Erro na requisição');
+    }
+    return res.json();
+  },
+
   async delete(endpoint) {
     const res = await fetch(`${getApiBase()}${endpoint}`, {
       method: 'DELETE',
@@ -184,3 +197,23 @@ export const updateVisitor = (id, data) => api.put(`/api/visitors/${id}`, data);
 export const deleteVisitor = (id) => api.delete(`/api/visitors/${id}`);
 export const completeVisitorRegistration = (visitorId, data) => api.post(`/api/visitors/${visitorId}/complete-registration`, data);
 export const sendVisitorToRecomeco = (id) => api.post(`/api/visitors/${id}/send-to-recomeco`, {});
+
+export const getMembers = (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.type) params.set('type', filters.type);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.baptized !== undefined) params.set('baptized', String(filters.baptized));
+  if (filters.gds) params.set('gds', filters.gds);
+  if (filters.leadership !== undefined) params.set('leadership', String(filters.leadership));
+  if (filters.allergy) params.set('allergy', filters.allergy);
+  if (filters.birthdayMonth) params.set('birthdayMonth', filters.birthdayMonth);
+  if (filters.search) params.set('search', filters.search);
+  const qs = params.toString();
+  return api.get(`/api/members${qs ? '?' + qs : ''}`);
+};
+export const getMember = (id) => api.get(`/api/members/${id}`);
+export const createMember = (data) => api.post('/api/members', data);
+export const updateMember = (id, data) => api.put(`/api/members/${id}`, data);
+export const deleteMember = (id) => api.delete(`/api/members/${id}`);
+export const setMemberStatus = (id, member_status) => api.patch(`/api/members/${id}/status`, { member_status });
+export const setMemberCareStatus = (id, care_status) => api.patch(`/api/members/${id}/care-status`, { care_status });

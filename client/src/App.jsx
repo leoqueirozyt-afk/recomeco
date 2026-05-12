@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import People from './pages/People';
 import PersonForm from './pages/PersonForm';
 import Mentors from './pages/Mentors';
+import Members from './pages/Members';
 import Login from './pages/Login';
 import Backup from './pages/Backup';
 import Visitors from './pages/Visitors';
@@ -104,6 +105,11 @@ function App() {
                       </NavLink>
                     </li>
                     <li className="nav-item">
+                      <NavLink to="/members" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
+                        <span className="nav-icon">👥</span>Membros
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
                       <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
                         <span className="nav-icon">📊</span>Dashboard
                       </NavLink>
@@ -149,6 +155,7 @@ function App() {
                   <Route path="/people/new" element={<PersonForm />} />
                   <Route path="/people/:id" element={<PersonForm />} />
                   <Route path="/mentors" element={<Mentors />} />
+                  <Route path="/members" element={<Members />} />
                   <Route path="/visitors" element={<Visitors />} />
                   <Route path="/backup" element={<Backup />} />
                 </Routes>
