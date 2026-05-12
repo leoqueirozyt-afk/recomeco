@@ -681,103 +681,202 @@ app.delete('/api/mentors/:id', requireSupabase, async (req, res) => {
 
 app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
   try {
-    const { data: people, error } = await supabase
-      .from('people')
-      .select('*');
-    
-    if (error) throw error;
-
-    const all = people || [];
-    const total = all.length;
-    const inCare = all.filter(p => p.disciple_status === 'Em cuidado').length;
-    const awaitingDecision = all.filter(p => p.disciple_status === 'Aguardando decisão').length;
-    const disciple = all.filter(p => p.disciple_status === 'Discípulo').length;
-    const visitor = all.filter(p => p.disciple_status === 'Visitante').length;
-    const baptized = all.filter(p => p.baptized).length;
-    const notBaptized = all.filter(p => !p.baptized).length;
-
-    const { data: links } = await supabase.from('people_mentors').select('person_id');
-    const peopleWithMentor = new Set(links?.map(l => l.person_id) || []);
-    const withoutMentor = all.filter(p => !peopleWithMentor.has(p.id)).length;
-
-    // Visitors stats
-    const { data: visitors } = await supabase.from('visitors').select('*');
-    const visitorsAll = visitors || [];
     const now = new Date();
     const currentMonthStr = String(now.getMonth() + 1).padStart(2, '0');
     const currentYearStr = String(now.getFullYear());
     const todayStr = String(now.getFullYear()) + '-' + currentMonthStr + '-' + String(now.getDate()).padStart(2, '0');
-    const totalVisitors = visitorsAll.length;
-    const visitorsToday = visitorsAll.filter(v => v.visit_date === todayStr).length;
-    const thisMonthVisitors = visitorsAll.filter(v => {
-      if (!v.visit_date) return false;
-      const d = String(v.visit_date);
-      return d.startsWith(currentYearStr + '-' + currentMonthStr);
-    }).length;
-    const visitorsNotSent = visitorsAll.filter(v => !v.sent_to_recomeco).length;
-    const visitorsSent = visitorsAll.filter(v => v.sent_to_recomeco).length;
 
-    // Members stats
-    const { data: members } = await supabase.from('members').select('*');
+    // =====================
+    // PEOPLE (Recomeço)
+    // =====================
+    const { data: people, error: peopleErr } = await supabase.from('people').select('*');
+    if (peopleErr) throw peopleErr;
+    const all = people || [];
+    const total = all.length;
+
+    // =====================
+    // VISITORS
+    // =====================
+    const { data: visitors, error: visitorsErr } = await supabase.from('visitors').select('*');
+    if (visitorsErr) throw visitorsErr;
+    const visitorsAll = visitors || [];
+
+    const visitorsToday = visitorsAll.filter(v => v.visit_date === todayStr).length;
+    const visitorsThisMonth = visitorsAll.filter(v => {
+      if (!v.visit_date) return false;
+      return String(v.visit_date).startsWith(currentYearStr + '-' + currentMonthStr);
+    }).length;
+    const visitorsWaitingCare = visitorsAll.filter(v => !v.sent_to_recomeco).length;
+    const visitorsInCare = visitorsAll.filter(v => v.sent_to_recomeco).length;
+
+    // =====================
+    // MEMBERS
+    // =====================
+    const { data: members, error: membersErr } = await supabase.from('members').select('*');
+    if (membersErr) throw membersErr;
     const membersAll = members || [];
     const activeMembers = membersAll.filter(m => m.member_status === 'Ativo');
     const inactiveMembers = membersAll.filter(m => m.member_status === 'Inativo');
     const activeAdults = activeMembers.filter(m => m.member_type === 'Adulto');
     const activeChildren = activeMembers.filter(m => m.member_type === 'Criança');
-    const inCareMembers = activeMembers.filter(m => m.care_status === 'Em cuidado pelo Recomeço');
     const baptizedMembers = activeMembers.filter(m => m.baptized);
     const leadershipMembers = activeMembers.filter(m => m.is_leadership);
-    const currentMonthBd = String(now.getMonth() + 1).padStart(2, '0');
+
+    // =====================
+    // BACKUP STATUS
+    // =====================
+    const { data: lastBackup } = await supabase
+      .from('backup_logs')
+      .select('*')
+      .order('exported_at', { ascending: false })
+      .limit(1)
+      .single();
+    const { data: pendingBackup } = await supabase
+      .from('backup_logs')
+      .select('id')
+      .eq('backup_month', now.getMonth() + 1)
+      .eq('backup_year', now.getFullYear())
+      .maybeSingle();
+
+    // =====================
+    // MENTORS
+    // =====================
+    const { data: mentors } = await supabase.from('mentors').select('*');
+    const activeMentors = (mentors || []).filter(m => m.active).length;
+
+    // =====================
+    // PEOPLE BY MENTOR
+    // =====================
+    const { data: links } = await supabase.from('people_mentors').select('*');
+    const mentorsMap = {};
+    for (const link of links || []) {
+      mentorsMap[link.mentor_id] = (mentorsMap[link.mentor_id] || 0) + 1;
+    }
+    const peopleByMentor = (mentors || [])
+      .filter(m => m.active)
+      .map(m => ({ name: m.full_name, count: mentorsMap[m.id] || 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // =====================
+    // RECOMECO SECTION
+    // =====================
+    const peopleInCare = all.filter(p => p.disciple_status === 'Em cuidado').length;
+    const waitingDecision = all.filter(p => p.disciple_status === 'Aguardando decisão').length;
+    const disciples = all.filter(p => p.disciple_status === 'Discípulo').length;
+    const visitorsInFollowUp = all.filter(p => p.disciple_status === 'Visitante').length;
+
+    const peopleThisMonth = all.filter(p => {
+      if (!p.decision_date) return false;
+      return String(p.decision_date).startsWith(currentYearStr + '-' + currentMonthStr);
+    }).length;
+
+    const totalInFollowUp = peopleInCare + waitingDecision + disciples + visitorsInFollowUp;
+    const discipleshipRate = totalInFollowUp > 0 ? Math.round((disciples / totalInFollowUp) * 100) : 0;
+
+    const byFirstDecision = Object.entries(all.reduce((acc, p) => {
+      if (p.first_decision) acc[p.first_decision] = (acc[p.first_decision] || 0) + 1;
+      return acc;
+    }, {})).map(([decision, count]) => ({ decision, count }));
+
+    const byMonth = Object.entries(all.reduce((acc, p) => {
+      if (p.decision_month) acc[p.decision_month] = (acc[p.decision_month] || 0) + 1;
+      return acc;
+    }, {})).map(([month, count]) => ({ month, count }));
+
+    const recentPeople = (people || [])
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 5)
+      .map(mapPerson);
+
+    // =====================
+    // CHURCH SECTION
+    // =====================
+    const currentMonthBd = currentMonthStr;
     const birthdayMembers = activeMembers.filter(m => {
       if (!m.birth_date) return false;
       return String(m.birth_date).includes(`-${currentMonthBd}-`);
     });
 
-    const { data: recentPeople } = await supabase
-      .from('people')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5);
+    const newMembersThisMonth = activeMembers.filter(m => {
+      if (!m.created_at) return false;
+      const c = new Date(m.created_at);
+      return c.getMonth() === now.getMonth() && c.getFullYear() === now.getFullYear();
+    }).length;
 
-    const byStatus = Object.entries(all.reduce((acc, p) => {
-      acc[p.disciple_status] = (acc[p.disciple_status] || 0) + 1;
-      return acc;
-    }, {})).map(([status, count]) => ({ status, count }));
+    const membersWithAllergy = activeMembers.filter(m => m.allergy || m.child_allergy).length;
+    const inCareMembersCount = activeMembers.filter(m => m.care_status === 'Em cuidado pelo Recomeço').length;
 
-    const byMonth = Object.entries(all.reduce((acc, p) => {
-      if (p.decision_month) {
-        acc[p.decision_month] = (acc[p.decision_month] || 0) + 1;
-      }
-      return acc;
-    }, {})).map(([month, count]) => ({ month, count }));
+    const gdsList = ['Jovens Aljava', 'Mulheres de Sião', 'Homens de Honra', 'Nenhum'];
+    const membersByGDS = gdsList.map(gds => ({
+      gds,
+      count: activeMembers.filter(m => (m.gds === gds || m.child_gds === gds)).length
+    }));
 
-    const byFirstDecision = Object.entries(all.reduce((acc, p) => {
-      if (p.first_decision) {
-        acc[p.first_decision] = (acc[p.first_decision] || 0) + 1;
-      }
-      return acc;
-    }, {})).map(([decision, count]) => ({ decision, count }));
+    const upcomingBirthdays = [...birthdayMembers]
+      .sort((a, b) => {
+        const aDay = parseInt(a.birth_date.split('-').pop(), 10);
+        const bDay = parseInt(b.birth_date.split('-').pop(), 10);
+        return aDay - bDay;
+      })
+      .map(m => ({
+        id: m.id,
+        fullName: m.full_name,
+        birthDate: m.birth_date,
+        memberType: m.member_type,
+        phone: m.member_type === 'Adulto' ? m.phone : m.responsible_contact
+      }));
 
-    const byGender = Object.entries(all.reduce((acc, p) => {
-      if (p.gender) {
-        acc[p.gender] = (acc[p.gender] || 0) + 1;
-      }
-      return acc;
-    }, {})).map(([gender, count]) => ({ gender, count }));
+    const membersInCareList = activeMembers
+      .filter(m => m.care_status === 'Em cuidado pelo Recomeço')
+      .slice(0, 10)
+      .map(m => ({
+        id: m.id,
+        fullName: m.full_name,
+        memberType: m.member_type,
+        careStatus: m.care_status
+      }));
 
+    // =====================
+    // RESPONSE
+    // =====================
     res.json({
-      total, inCare, awaitingDecision, disciple, visitor, baptized, notBaptized, withoutMentor,
-      totalVisitors, visitorsToday, thisMonthVisitors, visitorsNotSent, visitorsSent,
-      totalMembers: activeMembers.length,
-      totalMembersInactive: inactiveMembers.length,
-      activeAdults: activeAdults.length,
-      activeChildren: activeChildren.length,
-      membersInCare: inCareMembers.length,
-      birthdayMembers: birthdayMembers.length,
-      baptizedMembers: baptizedMembers.length,
-      leadershipMembers: leadershipMembers.length,
-      byStatus, byMonth, byFirstDecision, byGender,
-      recentPeople: (recentPeople || []).map(mapPerson)
+      ok: true,
+      recomeco: {
+        visitorsToday,
+        visitorsThisMonth,
+        visitorsWaitingCare,
+        visitorsInCare,
+        peopleInCare,
+        waitingDecision,
+        disciples,
+        visitorsInFollowUp,
+        peopleThisMonth,
+        discipleshipRate,
+        activeMentors,
+        backupStatus: {
+          currentMonthDone: Boolean(pendingBackup),
+          lastBackupDate: lastBackup ? lastBackup.exported_at : null
+        },
+        decisionsByType: byFirstDecision,
+        peopleByMentor,
+        entriesByMonth: byMonth,
+        recentPeople
+      },
+      church: {
+        activeMembers: activeMembers.length,
+        inactiveMembers: inactiveMembers.length,
+        activeAdults: activeAdults.length,
+        activeChildren: activeChildren.length,
+        baptizedMembers: baptizedMembers.length,
+        leadershipMembers: leadershipMembers.length,
+        membersInCare: inCareMembersCount,
+        birthdaysThisMonth: birthdayMembers.length,
+        newMembersThisMonth,
+        membersWithAllergy,
+        membersByGDS,
+        upcomingBirthdays,
+        membersInCareList
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
