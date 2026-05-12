@@ -190,6 +190,62 @@ ALTER TABLE visitors ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all on visitors" ON visitors FOR ALL USING (true);
 
 -- =============================================
+-- TABELA MEMBERS (Membros)
+-- =============================================
+CREATE TABLE IF NOT EXISTS members (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    member_type TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    cpf TEXT,
+    birth_date DATE,
+    phone TEXT,
+    full_address TEXT,
+    marital_status TEXT,
+    gds TEXT,
+    is_leadership BOOLEAN DEFAULT false,
+    baptized BOOLEAN DEFAULT false,
+    allergy TEXT,
+    responsible_name TEXT,
+    responsible_contact TEXT,
+    child_gds TEXT,
+    child_allergy TEXT,
+    member_status TEXT DEFAULT 'Ativo',
+    care_status TEXT DEFAULT 'Sem cuidado ativo',
+    source TEXT DEFAULT 'Cadastro público',
+    person_id UUID REFERENCES people(id) ON DELETE SET NULL,
+    visitor_id UUID REFERENCES visitors(id) ON DELETE SET NULL,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_members_full_name ON members(full_name);
+CREATE INDEX IF NOT EXISTS idx_members_birth_date ON members(birth_date);
+CREATE INDEX IF NOT EXISTS idx_members_member_type ON members(member_type);
+CREATE INDEX IF NOT EXISTS idx_members_member_status ON members(member_status);
+CREATE INDEX IF NOT EXISTS idx_members_baptized ON members(baptized);
+CREATE INDEX IF NOT EXISTS idx_members_gds ON members(gds);
+CREATE INDEX IF NOT EXISTS idx_members_child_gds ON members(child_gds);
+CREATE INDEX IF NOT EXISTS idx_members_is_leadership ON members(is_leadership);
+CREATE INDEX IF NOT EXISTS idx_members_created_at ON members(created_at);
+CREATE INDEX IF NOT EXISTS idx_members_person_id ON members(person_id);
+CREATE INDEX IF NOT EXISTS idx_members_visitor_id ON members(visitor_id);
+
+DROP TRIGGER IF EXISTS update_members_updated_at ON members;
+CREATE TRIGGER update_members_updated_at
+    BEFORE UPDATE ON members
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on members" ON members FOR ALL USING (true);
+
+COMMENT ON TABLE members IS 'Tabela de membros do Ministério Recomeço.Adultos e crianças em acompanhamento.';
+COMMENT ON COLUMN members.cpf IS 'CPF do membro. Este campo contém dados sensíveis e não deve aparecer completo em listas públicas ou exports.';
+
+-- =============================================
 -- POLICIES DE SEGURANÇA (Row Level Security)
 -- =============================================
 ALTER TABLE people ENABLE ROW LEVEL SECURITY;
