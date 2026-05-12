@@ -70,11 +70,8 @@ function PublicVisitorRegistration() {
 
       setSuccess(true);
       setForm({
-        visitDate: new Date().toISOString().split('T')[0],
-        firstName: '',
-        lastName: '',
-        whatsapp: '',
-        notes: ''
+        visitDate: new Date().toLocaleDateString('en-CA'),
+        firstName: '', lastName: '', whatsapp: '', notes: ''
       });
     } catch (err) {
       setError(err.message);
