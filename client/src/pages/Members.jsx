@@ -194,6 +194,10 @@ function Members() {
     return nameMatch && typeMatch && statusMatch && baptMatch && gdsMatch && leaderMatch && allergyMatch && birthdayMatch;
   });
 
+  const inCareMembers = members.filter(m =>
+    m.careStatus && m.careStatus !== 'Sem cuidado ativo'
+  );
+
   if (loading) {
     return <div className="empty-state">Carregando...</div>;
   }
@@ -273,6 +277,75 @@ function Members() {
           </select>
         </div>
       </div>
+
+      {inCareMembers.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{
+            background: '#fff5f5', border: '1px solid rgba(220,20,60,0.2)',
+            borderRadius: '12px', padding: '16px 20px', marginBottom: '16px'
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              marginBottom: '12px'
+            }}>
+              <span style={{ fontSize: '16px' }}>🌱</span>
+              <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#dc143c', margin: 0 }}>
+                Discípulos em Cuidado ({inCareMembers.length})
+              </h3>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: '10px'
+            }}>
+              {inCareMembers.map(m => (
+                <div key={m.id} style={{
+                  background: 'white', borderRadius: '8px', padding: '10px 14px',
+                  border: '1px solid #e0e0e0', display: 'flex',
+                  alignItems: 'center', gap: '10px',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{
+                    width: '34px', height: '34px', borderRadius: '50%',
+                    background: '#dc143c', color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', fontWeight: '700', flexShrink: 0
+                  }}>
+                    {m.fullName?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: '13px', fontWeight: '600', color: '#2c3e50',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                    }}>
+                      {m.fullName}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#e67e22', fontWeight: '600' }}>
+                      {m.careStatus}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '4px 8px', fontSize: '11px' }}
+                      onClick={() => loadMemberDetail(m.id)}
+                    >
+                      Ver
+                    </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '4px 8px', fontSize: '11px' }}
+                      onClick={() => handleCareStatus(m, 'Sem cuidado ativo')}
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {filteredMembers.length === 0 ? (
         <div className="empty-state">
