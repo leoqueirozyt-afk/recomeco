@@ -131,6 +131,11 @@ function App() {
                       </NavLink>
                     </li>
                     <li className="nav-item">
+                      <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
+                        <span className="nav-icon">👑</span>Líderes
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
                       <NavLink to="/backup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${backupPending ? 'backup-pending' : ''}`} onClick={closeSidebar}>
                         <span className="nav-icon">{backupPending ? '🔔' : '💾'}</span>Backup {backupPending && '⚠️'}
                       </NavLink>
