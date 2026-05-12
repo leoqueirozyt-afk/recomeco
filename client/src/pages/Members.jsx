@@ -188,7 +188,7 @@ function Members() {
     let birthdayMatch = true;
     if (filterBirthday === 'Sim' && m.birthDate) {
       const now = new Date();
-      const bDay = new Date(m.birthDate);
+      const bDay = new Date(m.birthDate + 'T12:00:00');
       birthdayMatch = bDay.getMonth() === now.getMonth();
     }
     return nameMatch && typeMatch && statusMatch && baptMatch && gdsMatch && leaderMatch && allergyMatch && birthdayMatch;
@@ -322,7 +322,7 @@ function Members() {
                         </span>
                       </td>
                       <td>
-                        {m.birthDate ? new Date(m.birthDate).toLocaleDateString('pt-BR') : '-'}
+                        {m.birthDate ? new Date(m.birthDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
                       </td>
                       <td>{m.gds || m.childGds || '-'}</td>
                       <td>
@@ -562,7 +562,7 @@ function Members() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div><strong>CPF:</strong> {detailMember.cpf || '-'}</div>
-                <div><strong>Nascimento:</strong> {detailMember.birthDate ? new Date(detailMember.birthDate).toLocaleDateString('pt-BR') : '-'}</div>
+                <div><strong>Nascimento:</strong> {detailMember.birthDate ? new Date(detailMember.birthDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</div>
               </div>
               {detailMember.memberType === 'Adulto' ? (
                 <>

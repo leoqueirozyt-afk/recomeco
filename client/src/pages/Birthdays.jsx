@@ -146,7 +146,7 @@ function Birthdays() {
                           {m.memberType}
                         </span>
                       </td>
-                      <td>{m.birthDate ? new Date(m.birthDate).toLocaleDateString('pt-BR') : '-'}</td>
+                      <td>{m.birthDate ? new Date(m.birthDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</td>
                       <td>
                         {m.memberType === 'Adulto' ? (m.phone || '-') : (m.responsibleContact || m.responsibleName || '-')}
                       </td>
