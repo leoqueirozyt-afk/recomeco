@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Backup from './pages/Backup';
 import Visitors from './pages/Visitors';
 import PublicVisitorRegistration from './pages/PublicVisitorRegistration';
+import PublicMemberRegistration from './pages/PublicMemberRegistration';
 
 function ProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
@@ -85,6 +86,7 @@ function App() {
           auth.isAuthenticated() ? <Navigate to="/" replace /> : <Login />
         } />
         <Route path="/cadastro-visitante" element={<PublicVisitorRegistration />} />
+        <Route path="/cadastro-membro" element={<PublicMemberRegistration />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <div className="app-container">
