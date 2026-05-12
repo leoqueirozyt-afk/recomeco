@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getMembers, getMember, createMember, updateMember, deleteMember, setMemberStatus, setMemberCareStatus } from '../services/api';
 
 function Members() {
   const [members, setMembers] = useState([]);
+  const membersRef = useRef(members);
   const [loading, setLoading] = useState(true);
+  const [careLoading, setCareLoading] = useState(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('Todos');
   const [filterStatus, setFilterStatus] = useState('Todos');
@@ -49,6 +51,7 @@ function Members() {
   const loadMembers = async () => {
     try {
       const result = await getMembers();
+      membersRef.current = result;
       setMembers(result);
     } catch (err) {
       console.error('Erro ao carregar membros:', err);
@@ -110,15 +113,23 @@ function Members() {
   };
 
   const handleCareStatus = async (member, status) => {
-    const previousMembers = [...members];
-    setMembers(prev => prev.map(m =>
+    if (careLoading) return;
+    setCareLoading(member.id);
+    const updated = membersRef.current.map(m =>
       m.id === member.id ? { ...m, careStatus: status } : m
-    ));
+    );
+    membersRef.current = updated;
+    setMembers(updated);
     try {
       await setMemberCareStatus(member.id, status);
     } catch (err) {
       console.error('Erro ao alterar cuidado:', err);
-      setMembers(previousMembers);
+      membersRef.current = membersRef.current.map(m =>
+        m.id === member.id ? { ...m, careStatus: member.careStatus } : m
+      );
+      setMembers([...membersRef.current]);
+    } finally {
+      setCareLoading(null);
     }
   };
 
@@ -339,9 +350,10 @@ function Members() {
                     <button
                       className="btn btn-secondary btn-sm"
                       style={{ padding: '4px 8px', fontSize: '11px' }}
+                      disabled={careLoading === m.id}
                       onClick={() => handleCareStatus(m, 'Sem cuidado ativo')}
                     >
-                      Remover
+                      {careLoading === m.id ? '...' : 'Remover'}
                     </button>
                   </div>
                 </div>
@@ -419,9 +431,10 @@ function Members() {
                           </button>
                           <button
                             className="btn btn-secondary btn-sm"
+                            disabled={careLoading === m.id}
                             onClick={() => handleCareStatus(m, m.careStatus === 'Em cuidado pelo Recomeço' ? 'Sem cuidado ativo' : 'Em cuidado pelo Recomeço')}
                           >
-                            {m.careStatus === 'Em cuidado pelo Recomeço' ? 'Remover Cuidado' : 'Marcar em Cuidado'}
+                            {careLoading === m.id ? '...' : (m.careStatus === 'Em cuidado pelo Recomeço' ? 'Remover' : 'Cuidado')}
                           </button>
                           <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(m.id)}>Excluir</button>
                         </div>
