@@ -288,6 +288,58 @@ app.get('/api/health', (req, res) => {
 });
 
 // =============================================
+// MEMBER HELPER FUNCTIONS
+// =============================================
+function mapMember(row, detailed = false) {
+  const base = {
+    id: row.id,
+    memberType: row.member_type,
+    fullName: row.full_name,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    birthDate: row.birth_date,
+    phone: row.phone,
+    fullAddress: row.full_address,
+    memberStatus: row.member_status,
+    careStatus: row.care_status,
+    source: row.source,
+    personId: row.person_id,
+    visitorId: row.visitor_id,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+
+  if (row.member_type === 'Adulto') {
+    base.maritalStatus = row.marital_status;
+    base.gds = row.gds;
+    base.isLeadership = row.is_leadership;
+    base.baptized = row.baptized;
+    base.allergy = row.allergy;
+    base.cpf = detailed ? row.cpf : maskCpf(row.cpf);
+  } else {
+    base.responsibleName = row.responsible_name;
+    base.responsibleContact = row.responsible_contact;
+    base.childGds = row.child_gds;
+    base.childAllergy = row.child_allergy;
+    base.cpf = detailed ? row.cpf : maskCpf(row.cpf);
+  }
+
+  return base;
+}
+
+function maskCpf(cpf) {
+  if (!cpf || cpf.length < 4) return cpf || null;
+  return '***.***.***-' + cpf.slice(-2);
+}
+
+function sanitizeMemberLog(data) {
+  const s = { ...data };
+  if (s.cpf) s.cpf = maskCpf(s.cpf);
+  return s;
+}
+
+// =============================================
 // ROTAS PÚBLICAS (sem autenticação)
 // =============================================
 app.post('/api/public/visitors', async (req, res) => {
@@ -324,6 +376,72 @@ app.post('/api/public/visitors', async (req, res) => {
       visitor: mapVisitor(visitor)
     });
   } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/public/members', requireSupabase, async (req, res) => {
+  try {
+    const { member_type, full_name, cpf, birth_date, phone, full_address,
+      marital_status, gds, is_leadership, baptized, allergy,
+      responsible_name, responsible_contact, child_gds, child_allergy,
+      notes } = req.body;
+
+    console.log('Public member registration received:', sanitizeMemberLog(req.body));
+
+    if (!member_type) {
+      return res.status(400).json({ ok: false, error: 'Tipo de membro é obrigatório.' });
+    }
+    if (member_type !== 'Adulto' && member_type !== 'Criança') {
+      return res.status(400).json({ ok: false, error: 'Tipo de membro precisa ser Adulto ou Criança.' });
+    }
+    if (!full_name) {
+      return res.status(400).json({ ok: false, error: 'Nome completo é obrigatório.' });
+    }
+
+    const insertData = {
+      member_type,
+      full_name,
+      cpf: cpf || null,
+      first_name: null,
+      last_name: null,
+      birth_date: birth_date || null,
+      phone: phone || null,
+      full_address: full_address || null,
+      member_status: 'Ativo',
+      care_status: 'Sem cuidado ativo',
+      source: 'Cadastro público',
+      notes: notes || null
+    };
+
+    if (member_type === 'Adulto') {
+      insertData.marital_status = marital_status || null;
+      insertData.gds = gds || null;
+      insertData.is_leadership = Boolean(is_leadership);
+      insertData.baptized = Boolean(baptized);
+      insertData.allergy = allergy || null;
+    } else {
+      insertData.responsible_name = responsible_name || null;
+      insertData.responsible_contact = responsible_contact || null;
+      insertData.child_gds = child_gds || null;
+      insertData.child_allergy = child_allergy || null;
+    }
+
+    const { data: member, error } = await supabase
+      .from('members')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      ok: true,
+      message: 'Membro cadastrado com sucesso.',
+      member: mapMember(member)
+    });
+  } catch (error) {
+    console.error('Error in public member registration:', error.message);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -1013,6 +1131,252 @@ app.post('/api/visitors/:id/complete-registration', requireSupabase, async (req,
     });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// =============================================
+// MEMBERS ROUTES (authenticated)
+// =============================================
+app.get('/api/members', requireSupabase, async (req, res) => {
+  try {
+    const { type, status, baptized, gds, leadership, allergy, birthdayMonth, search } = req.query;
+
+    let query = supabase
+      .from('members')
+      .select('*')
+      .order('full_name', { ascending: true });
+
+    if (type) query = query.eq('member_type', type);
+    if (status) query = query.eq('member_status', status);
+    if (baptized !== undefined) query = query.eq('baptized', baptized === 'true');
+    if (gds) query = query.eq('gds', gds);
+    if (leadership !== undefined) query = query.eq('is_leadership', leadership === 'true');
+    if (allergy) query = query.eq('allergy', allergy);
+    if (search) query = query.ilike('full_name', `%${search}%`);
+
+    if (birthdayMonth === 'current') {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      query = query.like('birth_date', `%-${month}-%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    res.json((data || []).map(m => mapMember(m, false)));
+  } catch (error) {
+    console.error('Error listing members:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/members/:id', requireSupabase, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('members')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Membro não encontrado' });
+    }
+
+    res.json(mapMember(data, true));
+  } catch (error) {
+    console.error('Error fetching member:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/members', requireSupabase, authenticateToken, async (req, res) => {
+  try {
+    const { member_type, full_name, cpf, birth_date, phone, full_address,
+      marital_status, gds, is_leadership, baptized, allergy,
+      responsible_name, responsible_contact, child_gds, child_allergy,
+      member_status, care_status, source, person_id, visitor_id, notes } = req.body;
+
+    console.log('Creating member:', sanitizeMemberLog(req.body));
+
+    if (!member_type) {
+      return res.status(400).json({ error: 'Tipo de membro é obrigatório.' });
+    }
+    if (member_type !== 'Adulto' && member_type !== 'Criança') {
+      return res.status(400).json({ error: 'Tipo de membro precisa ser Adulto ou Criança.' });
+    }
+    if (!full_name) {
+      return res.status(400).json({ error: 'Nome completo é obrigatório.' });
+    }
+    if (member_status && !['Ativo', 'Inativo'].includes(member_status)) {
+      return res.status(400).json({ error: 'member_status precisa ser Ativo ou Inativo.' });
+    }
+
+    const insertData = {
+      member_type,
+      full_name,
+      cpf: cpf || null,
+      birth_date: birth_date || null,
+      phone: phone || null,
+      full_address: full_address || null,
+      member_status: member_status || 'Ativo',
+      care_status: care_status || 'Sem cuidado ativo',
+      source: source || 'Cadastro interno',
+      person_id: person_id || null,
+      visitor_id: visitor_id || null,
+      notes: notes || null
+    };
+
+    if (member_type === 'Adulto') {
+      insertData.marital_status = marital_status || null;
+      insertData.gds = gds || null;
+      insertData.is_leadership = Boolean(is_leadership);
+      insertData.baptized = Boolean(baptized);
+      insertData.allergy = allergy || null;
+    } else {
+      insertData.responsible_name = responsible_name || null;
+      insertData.responsible_contact = responsible_contact || null;
+      insertData.child_gds = child_gds || null;
+      insertData.child_allergy = child_allergy || null;
+    }
+
+    const { data: member, error } = await supabase
+      .from('members')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json(mapMember(member, true));
+  } catch (error) {
+    console.error('Error creating member:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/members/:id', requireSupabase, authenticateToken, async (req, res) => {
+  try {
+    const { member_type, full_name, cpf, birth_date, phone, full_address,
+      marital_status, gds, is_leadership, baptized, allergy,
+      responsible_name, responsible_contact, child_gds, child_allergy,
+      member_status, care_status, source, person_id, visitor_id, notes } = req.body;
+
+    console.log('Updating member:', req.params.id);
+
+    if (!member_type) {
+      return res.status(400).json({ error: 'Tipo de membro é obrigatório.' });
+    }
+    if (member_type !== 'Adulto' && member_type !== 'Criança') {
+      return res.status(400).json({ error: 'Tipo de membro precisa ser Adulto ou Criança.' });
+    }
+    if (!full_name) {
+      return res.status(400).json({ error: 'Nome completo é obrigatório.' });
+    }
+    if (member_status && !['Ativo', 'Inativo'].includes(member_status)) {
+      return res.status(400).json({ error: 'member_status precisa ser Ativo ou Inativo.' });
+    }
+
+    const updateData = {
+      member_type,
+      full_name,
+      cpf: cpf || null,
+      birth_date: birth_date || null,
+      phone: phone || null,
+      full_address: full_address || null,
+      member_status: member_status || 'Ativo',
+      care_status: care_status || 'Sem cuidado ativo',
+      source: source || 'Cadastro interno',
+      person_id: person_id || null,
+      visitor_id: visitor_id || null,
+      notes: notes || null,
+      updated_at: new Date().toISOString()
+    };
+
+    if (member_type === 'Adulto') {
+      updateData.marital_status = marital_status || null;
+      updateData.gds = gds || null;
+      updateData.is_leadership = Boolean(is_leadership);
+      updateData.baptized = Boolean(baptized);
+      updateData.allergy = allergy || null;
+    } else {
+      updateData.marital_status = null;
+      updateData.gds = null;
+      updateData.is_leadership = false;
+      updateData.baptized = false;
+      updateData.allergy = null;
+      updateData.responsible_name = responsible_name || null;
+      updateData.responsible_contact = responsible_contact || null;
+      updateData.child_gds = child_gds || null;
+      updateData.child_allergy = child_allergy || null;
+    }
+
+    const { error } = await supabase
+      .from('members')
+      .update(updateData)
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+
+    res.json({ message: 'Membro atualizado com sucesso.' });
+  } catch (error) {
+    console.error('Error updating member:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/members/:id', requireSupabase, authenticateToken, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('members')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    res.json({ message: 'Membro excluído com sucesso.' });
+  } catch (error) {
+    console.error('Error deleting member:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/members/:id/status', requireSupabase, authenticateToken, async (req, res) => {
+  try {
+    const { member_status } = req.body;
+    if (!member_status || !['Ativo', 'Inativo'].includes(member_status)) {
+      return res.status(400).json({ error: 'member_status precisa ser Ativo ou Inativo.' });
+    }
+
+    const { error } = await supabase
+      .from('members')
+      .update({ member_status, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    res.json({ message: 'Status do membro atualizado.' });
+  } catch (error) {
+    console.error('Error updating member status:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/members/:id/care-status', requireSupabase, authenticateToken, async (req, res) => {
+  try {
+    const { care_status } = req.body;
+    const validStatuses = ['Sem cuidado ativo', 'Em cuidado pelo Recomeço', 'Acompanhamento finalizado', 'Precisa de contato'];
+    if (!care_status || !validStatuses.includes(care_status)) {
+      return res.status(400).json({ error: 'care_status inválido.' });
+    }
+
+    const { error } = await supabase
+      .from('members')
+      .update({ care_status, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    res.json({ message: 'Status de cuidado atualizado.' });
+  } catch (error) {
+    console.error('Error updating member care status:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
