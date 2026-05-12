@@ -110,11 +110,15 @@ function Members() {
   };
 
   const handleCareStatus = async (member, status) => {
+    const previousMembers = [...members];
+    setMembers(prev => prev.map(m =>
+      m.id === member.id ? { ...m, careStatus: status } : m
+    ));
     try {
       await setMemberCareStatus(member.id, status);
-      loadMembers();
     } catch (err) {
       console.error('Erro ao alterar cuidado:', err);
+      setMembers(previousMembers);
     }
   };
 
