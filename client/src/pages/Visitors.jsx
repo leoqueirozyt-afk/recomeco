@@ -207,7 +207,7 @@ function Visitors() {
                 <tbody>
                   {filteredVisitors.map(visitor => (
                     <tr key={visitor.id}>
-                      <td>{visitor.visitDate ? new Date(visitor.visitDate).toLocaleDateString('pt-BR') : '-'}</td>
+                      <td>{visitor.visitDate ? new Date(visitor.visitDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</td>
                       <td>{visitor.firstName}{visitor.lastName ? ' ' + visitor.lastName : ''}</td>
                       <td>{visitor.whatsapp || '-'}</td>
                       <td>
