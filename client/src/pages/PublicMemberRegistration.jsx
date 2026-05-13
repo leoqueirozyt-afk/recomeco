@@ -16,13 +16,13 @@ function PublicMemberRegistration() {
     fullName: '', maritalStatus: '', cpf: '', birthDate: '',
     phone: '', zipCode: '', street: '', number: '', complement: '',
     neighborhood: '', city: '', state: '', gds: '', isLeadership: '',
-    baptized: '', allergy: '', notes: ''
+    baptized: '', hasAllergy: false, allergy: '', notes: ''
   });
 
   const [childForm, setChildForm] = useState({
     fullName: '', birthDate: '', cpf: '', zipCode: '', street: '',
     number: '', complement: '', neighborhood: '', city: '', state: '',
-    responsibleName: '', responsibleContact: '', allergy: '', childGds: '', notes: ''
+    responsibleName: '', responsibleContact: '', hasAllergy: false, allergy: '', childGds: '', notes: ''
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
@@ -115,7 +115,7 @@ function PublicMemberRegistration() {
           gds: adultForm.gds || null,
           is_leadership: adultForm.isLeadership === 'true',
           baptized: adultForm.baptized === 'true',
-          allergy: adultForm.allergy || null,
+          allergy: adultForm.hasAllergy ? (adultForm.allergy || null) : null,
           notes: adultForm.notes || null,
           zip_code: onlyNumbers(adultForm.zipCode) || null,
           street: adultForm.street || null,
@@ -131,7 +131,7 @@ function PublicMemberRegistration() {
           full_name: childForm.fullName,
           birth_date: childForm.birthDate || null,
           cpf: onlyNumbers(childForm.cpf) || null,
-          child_allergy: childForm.allergy || null,
+          child_allergy: childForm.hasAllergy ? (childForm.allergy || null) : null,
           child_gds: childForm.childGds || null,
           notes: childForm.notes || null,
           responsible_name: childForm.responsibleName || null,
@@ -161,12 +161,13 @@ function PublicMemberRegistration() {
         setAdultForm({
           fullName: '', maritalStatus: '', cpf: '', birthDate: '', phone: '',
           zipCode: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '',
-          gds: '', isLeadership: '', baptized: '', allergy: '', notes: ''
+          gds: '', isLeadership: '', baptized: '', hasAllergy: false, allergy: '', notes: ''
         });
       } else {
         setChildForm({
           fullName: '', birthDate: '', cpf: '', zipCode: '', street: '', number: '', complement: '',
-          neighborhood: '', city: '', state: '', responsibleName: '', responsibleContact: '', allergy: '', childGds: '', notes: ''
+          neighborhood: '', city: '', state: '', responsibleName: '', responsibleContact: '',
+          hasAllergy: false, allergy: '', childGds: '', notes: ''
         });
       }
     } catch (err) {
@@ -324,9 +325,19 @@ function PublicMemberRegistration() {
                 </div>
 
                 <div style={{ marginBottom: '18px' }}>
-                  <label style={labelStyle}>Alguma alergia?</label>
-                  <input type="text" value={adultForm.allergy} onChange={e => handleAdultChange('allergy', e.target.value)} placeholder="Ex: Frutos do mar, penicilina" style={inputStyle()} />
+                  <label style={labelStyle}>Possui alguma alergia?</label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="button" onClick={() => { handleAdultChange('hasAllergy', true); if (!adultForm.allergy) handleAdultChange('allergy', ''); }} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.hasAllergy === true ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.hasAllergy === true ? '#fff5f5' : '#fafafa', color: adultForm.hasAllergy === true ? '#dc143c' : '#555' }}>Sim</button>
+                    <button type="button" onClick={() => handleAdultChange('hasAllergy', false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.hasAllergy === false ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.hasAllergy === false ? '#fff5f5' : '#fafafa', color: adultForm.hasAllergy === false ? '#dc143c' : '#555' }}>Não</button>
+                  </div>
                 </div>
+
+                {adultForm.hasAllergy && (
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={labelStyle}>Qual alergia?</label>
+                    <input type="text" value={adultForm.allergy} onChange={e => handleAdultChange('allergy', e.target.value)} placeholder="Ex: Frutos do mar, penicilina, lactose..." style={inputStyle()} />
+                  </div>
+                )}
 
                 <div style={{ marginBottom: '24px' }}>
                   <label style={labelStyle}>Observações</label>
@@ -419,9 +430,19 @@ function PublicMemberRegistration() {
                 </div>
 
                 <div style={{ marginBottom: '18px' }}>
-                  <label style={labelStyle}>Alergia</label>
-                  <input type="text" value={childForm.allergy} onChange={e => handleChildChange('allergy', e.target.value)} placeholder="Ex: Lactose, ovo" style={inputStyle()} />
+                  <label style={labelStyle}>Possui alguma alergia?</label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="button" onClick={() => { handleChildChange('hasAllergy', true); if (!childForm.allergy) handleChildChange('allergy', ''); }} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: childForm.hasAllergy === true ? '2px solid #dc143c' : '2px solid #e0e0e0', background: childForm.hasAllergy === true ? '#fff5f5' : '#fafafa', color: childForm.hasAllergy === true ? '#dc143c' : '#555' }}>Sim</button>
+                    <button type="button" onClick={() => handleChildChange('hasAllergy', false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: childForm.hasAllergy === false ? '2px solid #dc143c' : '2px solid #e0e0e0', background: childForm.hasAllergy === false ? '#fff5f5' : '#fafafa', color: childForm.hasAllergy === false ? '#dc143c' : '#555' }}>Não</button>
+                  </div>
                 </div>
+
+                {childForm.hasAllergy && (
+                  <div style={{ marginBottom: '18px' }}>
+                    <label style={labelStyle}>Qual alergia?</label>
+                    <input type="text" value={childForm.allergy} onChange={e => handleChildChange('allergy', e.target.value)} placeholder="Ex: Lactose, ovo, penicilina..." style={inputStyle()} />
+                  </div>
+                )}
 
                 <div style={{ marginBottom: '24px' }}>
                   <label style={labelStyle}>Observações</label>
