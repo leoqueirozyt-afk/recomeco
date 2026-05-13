@@ -90,6 +90,8 @@ function Birthdays() {
             <option value="Jovens Aljava">Jovens Aljava</option>
             <option value="Mulheres de Sião">Mulheres de Sião</option>
             <option value="Homens de Honra">Homens de Honra</option>
+            <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
+            <option value="Herdeiros de Sião">Herdeiros de Sião</option>
             <option value="Nenhum">Nenhum</option>
           </select>
         </div>

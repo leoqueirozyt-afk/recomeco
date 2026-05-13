@@ -806,7 +806,7 @@ app.get('/api/dashboard/summary', requireSupabase, async (req, res) => {
     const membersWithAllergy = activeMembers.filter(m => m.allergy || m.child_allergy).length;
     const inCareMembersCount = activeMembers.filter(m => m.care_status === 'Em cuidado pelo Recomeço').length;
 
-    const gdsList = ['Jovens Aljava', 'Mulheres de Sião', 'Homens de Honra', 'Nenhum'];
+    const gdsList = ['Jovens Aljava', 'Mulheres de Sião', 'Homens de Honra', 'Ovelhinhas de Sião', 'Herdeiros de Sião', 'Nenhum'];
     const membersByGDS = gdsList.map(gds => ({
       gds,
       count: activeMembers.filter(m => (m.gds === gds || m.child_gds === gds)).length

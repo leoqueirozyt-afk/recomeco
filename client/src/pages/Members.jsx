@@ -93,22 +93,35 @@ function Members() {
   };
 
   const handleDelete = async () => {
+    const prev = [...membersRef.current];
+    membersRef.current = membersRef.current.filter(m => m.id !== deleteId);
+    setMembers([...membersRef.current]);
+    setDeleteId(null);
     try {
       await deleteMember(deleteId);
-      setDeleteId(null);
-      loadMembers();
     } catch (err) {
       console.error('Erro ao excluir:', err);
+      membersRef.current = prev;
+      setMembers(prev);
+      setDeleteId(deleteId);
     }
   };
 
   const handleToggleStatus = async (member) => {
+    const newStatus = member.memberStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+    const updated = membersRef.current.map(m =>
+      m.id === member.id ? { ...m, memberStatus: newStatus } : m
+    );
+    membersRef.current = updated;
+    setMembers(updated);
     try {
-      const newStatus = member.memberStatus === 'Ativo' ? 'Inativo' : 'Ativo';
       await setMemberStatus(member.id, newStatus);
-      loadMembers();
     } catch (err) {
       console.error('Erro ao alterar status:', err);
+      membersRef.current = membersRef.current.map(m =>
+        m.id === member.id ? { ...m, memberStatus: member.memberStatus } : m
+      );
+      setMembers([...membersRef.current]);
     }
   };
 
@@ -265,6 +278,8 @@ function Members() {
             <option value="Jovens Aljava">Jovens Aljava</option>
             <option value="Mulheres de Sião">Mulheres de Sião</option>
             <option value="Homens de Honra">Homens de Honra</option>
+            <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
+            <option value="Herdeiros de Sião">Herdeiros de Sião</option>
             <option value="Nenhum">Nenhum</option>
           </select>
         </div>
@@ -527,6 +542,8 @@ function Members() {
                         <option value="Jovens Aljava">Jovens Aljava</option>
                         <option value="Mulheres de Sião">Mulheres de Sião</option>
                         <option value="Homens de Honra">Homens de Honra</option>
+                        <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
+                        <option value="Herdeiros de Sião">Herdeiros de Sião</option>
                         <option value="Nenhum">Nenhum</option>
                       </select>
                     </div>
@@ -587,6 +604,8 @@ function Members() {
                         <option value="Jovens Aljava">Jovens Aljava</option>
                         <option value="Mulheres de Sião">Mulheres de Sião</option>
                         <option value="Homens de Honra">Homens de Honra</option>
+                        <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
+                        <option value="Herdeiros de Sião">Herdeiros de Sião</option>
                         <option value="Nenhum">Nenhum</option>
                       </select>
                     </div>

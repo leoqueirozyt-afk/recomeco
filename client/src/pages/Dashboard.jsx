@@ -184,7 +184,7 @@ function Dashboard() {
   ].filter(d => d.value > 0);
 
   const membersByGds = (c.membersByGDS || []).map((g, i) => ({
-    name: g.gds.replace('Jovens Aljava', 'Jovens').replace('Mulheres de Sião', 'Mulheres').replace('Homens de Honra', 'Homens'),
+    name: g.gds.replace('Jovens Aljava', 'Jovens').replace('Mulheres de Sião', 'Mulheres').replace('Homens de Honra', 'Homens').replace('Ovelhinhas de Sião', 'Ovelhinhas').replace('Herdeiros de Sião', 'Herdeiros'),
     value: g.count,
     color: PIE_COLORS[i % PIE_COLORS.length]
   })).filter(d => d.value > 0);
