@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getMembers, getMember, createMember, updateMember, deleteMember, setMemberStatus, setMemberCareStatus } from '../services/api';
 
 function Members() {
   const [members, setMembers] = useState([]);
-  const membersRef = useRef(members);
   const [loading, setLoading] = useState(true);
   const [careLoading, setCareLoading] = useState(null);
   const [search, setSearch] = useState('');
@@ -51,7 +50,6 @@ function Members() {
   const loadMembers = async () => {
     try {
       const result = await getMembers();
-      membersRef.current = result;
       setMembers(result);
     } catch (err) {
       console.error('Erro ao carregar membros:', err);
@@ -93,54 +91,45 @@ function Members() {
   };
 
   const handleDelete = async () => {
-    const prev = [...membersRef.current];
-    membersRef.current = membersRef.current.filter(m => m.id !== deleteId);
-    setMembers([...membersRef.current]);
+    const idToDelete = deleteId;
+    setMembers(prev => prev.filter(m => m.id !== idToDelete));
     setDeleteId(null);
     try {
-      await deleteMember(deleteId);
+      await deleteMember(idToDelete);
     } catch (err) {
       console.error('Erro ao excluir:', err);
-      membersRef.current = prev;
-      setMembers(prev);
-      setDeleteId(deleteId);
+      loadMembers();
     }
   };
 
   const handleToggleStatus = async (member) => {
     const newStatus = member.memberStatus === 'Ativo' ? 'Inativo' : 'Ativo';
-    const updated = membersRef.current.map(m =>
+    setMembers(prev => prev.map(m =>
       m.id === member.id ? { ...m, memberStatus: newStatus } : m
-    );
-    membersRef.current = updated;
-    setMembers(updated);
+    ));
     try {
       await setMemberStatus(member.id, newStatus);
     } catch (err) {
       console.error('Erro ao alterar status:', err);
-      membersRef.current = membersRef.current.map(m =>
+      setMembers(prev => prev.map(m =>
         m.id === member.id ? { ...m, memberStatus: member.memberStatus } : m
-      );
-      setMembers([...membersRef.current]);
+      ));
     }
   };
 
   const handleCareStatus = async (member, status) => {
     if (careLoading) return;
     setCareLoading(member.id);
-    const updated = membersRef.current.map(m =>
+    setMembers(prev => prev.map(m =>
       m.id === member.id ? { ...m, careStatus: status } : m
-    );
-    membersRef.current = updated;
-    setMembers(updated);
+    ));
     try {
       await setMemberCareStatus(member.id, status);
     } catch (err) {
       console.error('Erro ao alterar cuidado:', err);
-      membersRef.current = membersRef.current.map(m =>
+      setMembers(prev => prev.map(m =>
         m.id === member.id ? { ...m, careStatus: member.careStatus } : m
-      );
-      setMembers([...membersRef.current]);
+      ));
     } finally {
       setCareLoading(null);
     }
