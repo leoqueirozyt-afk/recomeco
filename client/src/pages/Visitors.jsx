@@ -11,8 +11,7 @@ function Visitors() {
   const [deleteId, setDeleteId] = useState(null);
   const [searchName, setSearchName] = useState('');
   const [searchWhatsapp, setSearchWhatsapp] = useState('');
-  const [filterSent, setFilterSent] = useState('today');
-  const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const [form, setForm] = useState({
     visitDate: new Date().toISOString().split('T')[0],
@@ -100,14 +99,11 @@ function Visitors() {
       (v.firstName + ' ' + (v.lastName || '')).toLowerCase().includes(searchName.toLowerCase());
     const whatsappMatch = !searchWhatsapp ||
       (v.whatsapp || '').includes(searchWhatsapp);
-    let sentMatch = true;
-    if (filterSent === 'sent') sentMatch = v.sentToRecomeco;
-    else if (filterSent === 'notsent') sentMatch = !v.sentToRecomeco;
-    let dateMatch = true;
-    if (filterSent === 'today') {
-      dateMatch = v.visitDate === filterDate;
-    }
-    return nameMatch && whatsappMatch && sentMatch && dateMatch;
+    let statusMatch = true;
+    if (filterStatus === 'today') statusMatch = v.visitDate === new Date().toISOString().split('T')[0];
+    else if (filterStatus === 'waiting') statusMatch = !v.sentToRecomeco;
+    else if (filterStatus === 'following') statusMatch = v.sentToRecomeco;
+    return nameMatch && whatsappMatch && statusMatch;
   });
 
   if (loading) {
@@ -149,25 +145,16 @@ function Visitors() {
           />
         </div>
         <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label" style={{ marginBottom: '6px' }}>Data da Visita</label>
-          <input
-            type="date"
-            className="form-input"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-          />
-        </div>
-        <div className="form-group" style={{ marginBottom: 0 }}>
           <label className="form-label" style={{ marginBottom: '6px' }}>Status</label>
           <select
             className="form-select"
-            value={filterSent}
-            onChange={(e) => setFilterSent(e.target.value)}
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
           >
-            <option value="today">Visitantes de hoje</option>
-            <option value="all">Todos</option>
-            <option value="notsent">Aguardando Acompanhamento</option>
-            <option value="sent">Em Acompanhamento</option>
+            <option value="all">Todos os Visitantes</option>
+            <option value="today">Visitantes de Hoje</option>
+            <option value="waiting">Aguardando Acompanhamento</option>
+            <option value="following">Em Acompanhamento</option>
           </select>
         </div>
       </div>
@@ -176,9 +163,9 @@ function Visitors() {
         <div className="empty-state">
           <div className="empty-icon">👋</div>
           <div className="empty-text">Nenhum visitante encontrado</div>
-          {filterSent === 'today' && (
+          {filterStatus === 'today' && (
             <p style={{ color: 'var(--text-light)', marginTop: '8px' }}>
-              Nenhum visitante cadastrado para hoje ({new Date().toLocaleDateString('pt-BR')})
+              Nenhum visitante cadastrado hoje ({new Date().toLocaleDateString('pt-BR')})
             </p>
           )}
           <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={() => setShowModal(true)}>
@@ -188,7 +175,7 @@ function Visitors() {
       ) : (
         <>
           <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-light)' }}>
-            {filterSent === 'today'
+            {filterStatus === 'today'
               ? `Visitantes de hoje: ${filteredVisitors.length}`
               : `${filteredVisitors.length} visitante(s) encontrado(s)`}
           </div>

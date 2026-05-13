@@ -1369,6 +1369,10 @@ app.post('/api/people/:id/become-member', requireSupabase, authenticateToken, as
 
     if (memberError) throw memberError;
 
+    if (person.visitor_id) {
+      await supabase.from('visitors').delete().eq('id', person.visitor_id);
+    }
+
     res.status(201).json({
       ok: true,
       message: 'Pessoa adicionada à lista de membros com sucesso.',
