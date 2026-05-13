@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS people (
     final_decision TEXT DEFAULT 'Em acompanhamento',
     notes TEXT,
     visitor_id UUID REFERENCES visitors(id) ON DELETE SET NULL,
+    care_start_date DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

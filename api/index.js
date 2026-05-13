@@ -265,6 +265,7 @@ function mapPerson(row) {
     notes: row.notes,
     visitorId: row.visitor_id,
     mentors: row.mentors || '',
+    careStartDate: row.care_start_date,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -523,7 +524,8 @@ app.post('/api/people', requireSupabase, async (req, res) => {
         first_decision: req.body.firstDecision || null,
         disciple_status: req.body.discipleStatus || 'Em cuidado',
         final_decision: req.body.finalDecision || 'Em acompanhamento',
-        notes: req.body.notes || null
+        notes: req.body.notes || null,
+        care_start_date: req.body.careStartDate || new Date().toISOString().split('T')[0]
       })
       .select()
       .single();
@@ -561,6 +563,7 @@ app.put('/api/people/:id', requireSupabase, async (req, res) => {
         disciple_status: req.body.discipleStatus || 'Em cuidado',
         final_decision: req.body.finalDecision || 'Em acompanhamento',
         notes: req.body.notes || null,
+        care_start_date: req.body.careStartDate || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', req.params.id);
@@ -1267,7 +1270,7 @@ app.post('/api/visitors/:id/complete-registration', requireSupabase, async (req,
       });
     }
 
-    const { decision_date, decision_month, full_name, birth_date, full_address, contact, gender, baptized, first_decision, disciple_status, final_decision, notes: personNotes, mentor_ids, visitor_id } = req.body;
+    const { decision_date, decision_month, full_name, birth_date, full_address, contact, gender, baptized, first_decision, disciple_status, final_decision, notes: personNotes, mentor_ids, visitor_id, care_start_date } = req.body;
 
     const { data: person, error: personError } = await supabase
       .from('people')
@@ -1284,7 +1287,8 @@ app.post('/api/visitors/:id/complete-registration', requireSupabase, async (req,
         disciple_status: disciple_status || 'Em cuidado',
         final_decision: final_decision || 'Em acompanhamento',
         notes: personNotes || visitor.notes || null,
-        visitor_id: visitor.id
+        visitor_id: visitor.id,
+        care_start_date: care_start_date || new Date().toISOString().split('T')[0]
       })
       .select()
       .single();

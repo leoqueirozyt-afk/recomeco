@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getPeople, deletePerson, becomeMember, getMembers } from '../services/api';
 
 const FIRST_DECISIONS = ['Aceitou Jesus', 'Reconciliação', 'Visitante', 'Pedido de oração', 'Outro'];
@@ -14,7 +14,7 @@ function People() {
   const [filterMonth, setFilterMonth] = useState('');
   const [filterDecision, setFilterDecision] = useState('');
   const [filterBaptized, setFilterBaptized] = useState('');
-  const [deleteId, setDeleteId] = useState(null);
+  const [navigate] = [useNavigate()];
   const [becomeMemberId, setBecomeMemberId] = useState(null);
   const [becomeMemberLoading, setBecomeMemberLoading] = useState(false);
   const [memberAlreadyExists, setMemberAlreadyExists] = useState(false);
@@ -98,6 +98,12 @@ function People() {
         <p className="page-subtitle">{filteredPeople.length} pessoa(s) encontrada(s)</p>
       </div>
 
+      <div style={{ marginBottom: '16px' }}>
+        <button className="btn btn-primary" onClick={() => navigate('/people/new')}>
+          + Novo Acompanhamento
+        </button>
+      </div>
+
       <div className="search-bar">
         <input
           type="text"
@@ -164,7 +170,34 @@ function People() {
         </div>
       ) : (
         <div className="people-grid">
-          {filteredPeople.map(person => (
+          {filteredPeople.map(person => {
+            let progress = 0;
+            let startLabel = '';
+            let endLabel = '';
+            let barColor = '#dc143c';
+            let barBg = 'rgba(220,20,60,0.1)';
+
+            if (person.careStartDate) {
+              const start = new Date(person.careStartDate + 'T12:00:00');
+              const end = new Date(start);
+              end.setDate(end.getDate() + 15);
+              const now = new Date();
+              const totalDays = 15;
+              const elapsed = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
+              progress = Math.min(100, Math.round((elapsed / totalDays) * 100));
+              startLabel = start.toLocaleDateString('pt-BR');
+              endLabel = end.toLocaleDateString('pt-BR');
+              if (progress >= 100) {
+                barColor = '#e67e22';
+                barBg = 'rgba(230,126,34,0.1)';
+              }
+              if (progress >= 100 && person.discipleStatus === 'Discípulo') {
+                barColor = '#27ae60';
+                barBg = 'rgba(39,174,96,0.1)';
+              }
+            }
+
+            return (
             <div key={person.id} className="person-card">
               {person.photo ? (
                 <div className="person-card-photo">
@@ -176,8 +209,28 @@ function People() {
                 </div>
               )}
               <div className="person-name">{person.fullName}</div>
+              {person.careStartDate && (
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#999', marginBottom: '3px' }}>
+                    <span>Início: {startLabel}</span>
+                    <span>Fim: {endLabel}</span>
+                  </div>
+                  <div style={{ background: barBg, borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${progress}%`,
+                      height: '100%',
+                      background: barColor,
+                      borderRadius: '6px',
+                      transition: 'width 0.5s ease',
+                    }} />
+                  </div>
+                  <div style={{ textAlign: 'center', fontSize: '10px', color: '#666', marginTop: '2px', fontWeight: '600' }}>
+                    {progress >= 100 ? '⏰ Prazo' : `${progress}%`}
+                  </div>
+                </div>
+              )}
               <div className="person-info">
-                <strong>Decisão:</strong> {person.decisionDate ? new Date(person.decisionDate).toLocaleDateString('pt-BR') : '-'}
+                <strong>Decisão:</strong> {person.decisionDate ? new Date(person.decisionDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
               </div>
               <div className="person-info">
                 <strong>Mês:</strong> {person.decisionMonth || '-'}
@@ -225,7 +278,8 @@ function People() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

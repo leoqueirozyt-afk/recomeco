@@ -31,7 +31,8 @@ function PersonForm() {
     finalDecision: 'Em acompanhamento',
     photo: '',
     notes: '',
-    mentorIds: []
+    mentorIds: [],
+    careStartDate: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -72,7 +73,8 @@ function PersonForm() {
           finalDecision: person.finalDecision || 'Em acompanhamento',
           photo: person.photo || '',
           notes: person.notes || '',
-          mentorIds
+          mentorIds,
+          careStartDate: person.careStartDate || new Date().toISOString().split('T')[0]
         });
       }
     } catch (error) {
@@ -274,6 +276,37 @@ function PersonForm() {
             onChange={handleChange}
             placeholder="Rua, número, bairro, cidade..."
           />
+        </div>
+
+        <h3 style={{ marginTop: '32px', marginBottom: '20px', color: 'var(--primary)' }}>Acompanhamento</h3>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">Data de Início do Acompanhamento</label>
+            <input
+              type="date"
+              name="careStartDate"
+              className="form-input"
+              value={form.careStartDate}
+              onChange={handleChange}
+            />
+          </div>
+          {form.careStartDate && (() => {
+            const start = new Date(form.careStartDate + 'T12:00:00');
+            start.setDate(start.getDate() + 15);
+            return (
+              <div className="form-group">
+                <label className="form-label">Previsão de Término (15 dias)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={start.toLocaleDateString('pt-BR')}
+                  readOnly
+                  style={{ background: '#f0f0f0', color: '#666' }}
+                />
+              </div>
+            );
+          })()}
         </div>
 
         <h3 style={{ marginTop: '32px', marginBottom: '20px', color: 'var(--primary)' }}>Dados da Decisão</h3>

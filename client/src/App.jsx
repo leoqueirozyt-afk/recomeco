@@ -126,11 +126,6 @@ function App() {
                       </NavLink>
                     </li>
                     <li className="nav-item">
-                      <NavLink to="/people/new" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar}>
-                        <span className="nav-icon">➕</span>Novo
-                      </NavLink>
-                    </li>
-                    <li className="nav-item">
                       <NavLink to="/mentors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeSidebar} end>
                         <span className="nav-icon">👑</span>Líderes
                       </NavLink>
