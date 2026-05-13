@@ -276,7 +276,7 @@ function PublicMemberRegistration() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '18px' }}>
                   <div>
-                    <label style={labelStyle}>Endereço</label>
+                    <label style={labelStyle}>Número</label>
                     <input type="text" value={adultForm.number} onChange={e => handleAdultChange('number', e.target.value)} placeholder="Número" style={inputStyle()} />
                   </div>
                   <div>
