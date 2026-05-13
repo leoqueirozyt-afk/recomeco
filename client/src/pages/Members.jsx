@@ -38,10 +38,12 @@ function Members() {
     gds: '',
     is_leadership: false,
     baptized: false,
+    has_allergy: false,
     allergy: '',
     responsible_name: '',
     responsible_contact: '',
     child_gds: '',
+    child_has_allergy: false,
     child_allergy: '',
     member_status: 'Ativo',
     care_status: 'Sem cuidado ativo',
@@ -154,10 +156,12 @@ function Members() {
         gds: full.gds || '',
         is_leadership: full.isLeadership || false,
         baptized: full.baptized || false,
+        has_allergy: Boolean(full.allergy),
         allergy: full.allergy || '',
         responsible_name: full.responsibleName || '',
         responsible_contact: full.responsibleContact || '',
         child_gds: full.childGds || '',
+        child_has_allergy: Boolean(full.childAllergy),
         child_allergy: full.childAllergy || '',
         member_status: full.memberStatus || 'Ativo',
         care_status: full.careStatus || 'Sem cuidado ativo',
@@ -183,8 +187,10 @@ function Members() {
       full_name: '', cpf: '', birth_date: '', phone: '', full_address: '',
       zip_code: '', street: '', address_number: '', address_complement: '',
       neighborhood: '', city: '', state: '',
-      marital_status: '', gds: '', is_leadership: false, baptized: false, allergy: '',
-      responsible_name: '', responsible_contact: '', child_gds: '', child_allergy: '',
+      marital_status: '', gds: '', is_leadership: false, baptized: false,
+      has_allergy: false, allergy: '',
+      responsible_name: '', responsible_contact: '', child_gds: '',
+      child_has_allergy: false, child_allergy: '',
       member_status: 'Ativo', care_status: 'Sem cuidado ativo', notes: ''
     });
     setError('');
@@ -429,10 +435,10 @@ function Members() {
                       </td>
                       <td>
                         {m.birthDate ? new Date(m.birthDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
-                        {m.memberType === 'Adulto' && m.allergy && (
+                        {m.memberType === 'Adulto' && Boolean(m.allergy) && (
                           <div style={{ fontSize: '10px', color: '#856404', fontWeight: '600', marginTop: '2px' }}>⚠️ {m.allergy}</div>
                         )}
-                        {m.memberType === 'Criança' && m.childAllergy && (
+                        {m.memberType === 'Criança' && Boolean(m.childAllergy) && (
                           <div style={{ fontSize: '10px', color: '#856404', fontWeight: '600', marginTop: '2px' }}>⚠️ {m.childAllergy}</div>
                         )}
                       </td>
@@ -606,11 +612,20 @@ function Members() {
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Alergia</label>
-                      <input type="text" className="form-input" value={form.allergy}
-                        onChange={(e) => handleFormChange('allergy', e.target.value)} placeholder="Ex: Frutos do mar" />
+                      <label className="form-label">Possui alergia?</label>
+                      <select className="form-select" value={String(form.has_allergy)} onChange={(e) => handleFormChange('has_allergy', e.target.value === 'true')}>
+                        <option value="false">Não</option>
+                        <option value="true">Sim</option>
+                      </select>
                     </div>
                   </div>
+                  {form.has_allergy && (
+                    <div className="form-group">
+                      <label className="form-label">Qual alergia?</label>
+                      <input type="text" className="form-input" value={form.allergy}
+                        onChange={(e) => handleFormChange('allergy', e.target.value)} placeholder="Ex: Frutos do mar, lactose, penicilina..." />
+                    </div>
+                  )}
                   <div className="form-group">
                     <label className="form-label">GDS</label>
                     <select className="form-select" value={form.gds} onChange={(e) => handleFormChange('gds', e.target.value)}>
@@ -652,22 +667,19 @@ function Members() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label className="form-label">GDS</label>
-                      <select className="form-select" value={form.child_gds} onChange={(e) => handleFormChange('child_gds', e.target.value)}>
-                        <option value="">Selecione</option>
-                        <option value="Jovens Aljava">Jovens Aljava</option>
-                        <option value="Mulheres de Sião">Mulheres de Sião</option>
-                        <option value="Homens de Honra">Homens de Honra</option>
-                        <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
-                        <option value="Herdeiros de Sião">Herdeiros de Sião</option>
-                        <option value="Nenhum">Nenhum</option>
+                      <label className="form-label">Possui alergia?</label>
+                      <select className="form-select" value={String(form.child_has_allergy)} onChange={(e) => handleFormChange('child_has_allergy', e.target.value === 'true')}>
+                        <option value="false">Não</option>
+                        <option value="true">Sim</option>
                       </select>
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Alergia</label>
-                      <input type="text" className="form-input" value={form.child_allergy}
-                        onChange={(e) => handleFormChange('child_allergy', e.target.value)} placeholder="Ex: Lactose" />
-                    </div>
+                    {form.child_has_allergy && (
+                      <div className="form-group">
+                        <label className="form-label">Qual alergia?</label>
+                        <input type="text" className="form-input" value={form.child_allergy}
+                          onChange={(e) => handleFormChange('child_allergy', e.target.value)} placeholder="Ex: Lactose, ovo, poeira..." />
+                      </div>
+                    )}
                   </div>
                   <div className="form-row">
                     <div className="form-group">
@@ -781,7 +793,7 @@ function Members() {
                   <strong style={{ color: '#856404' }}>⚠️ Alergia:</strong> <span style={{ color: '#856404', fontWeight: '600' }}>{detailMember.allergy}</span>
                 </div>
               )}
-              {!detailMember.memberType || detailMember.memberType === 'Criança' && detailMember.childAllergy && (
+              {detailMember.memberType === 'Criança' && detailMember.childAllergy && (
                 <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '10px 14px' }}>
                   <strong style={{ color: '#856404' }}>⚠️ Alergia:</strong> <span style={{ color: '#856404', fontWeight: '600' }}>{detailMember.childAllergy}</span>
                 </div>
