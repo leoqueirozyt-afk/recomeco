@@ -29,6 +29,11 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 .app-container {
@@ -996,91 +1001,1380 @@ body {
     margin: 16px;
   }
   
-  /* Mentors */
-  .mentors-table {
+  .table-container {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  .mentors-cards {
-    display: none;
+
+.mentors-cards {
+    display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .mentors-cards .person-card {
+    padding: 16px;
+  }
+}
+
+.visitors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.visitor-card {
+  padding: 16px;
+}
+
+.visitor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.visitor-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.visitor-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.visitor-name strong {
+  display: block;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visitor-date {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.visitor-info {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+  padding-left: 56px;
+}
+
+.public-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.public-form-row-3 {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+
+.public-form-btn-group {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .visitors-table {
+    display: none;
+  }
+
+  .birthdays-table {
+    display: none;
+  }
+
+  .birthdays-list {
+    display: flex;
+  }
+
+  .birthdays-table {
+    display: none;
+  }
+}
+
+@media (min-width: 901px) {
+  .birthdays-list {
+    display: none;
+  }
+
+  .birthdays-table {
+    display: block;
+  }
+
+  .public-form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .public-form-row-3 {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+
+  .public-form-btn-group {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-form-row,
+  .public-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .public-form-btn-group {
+    flex-direction: column;
+  }
+}
+
+.visitors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.visitor-card {
+  padding: 16px;
+}
+
+.visitor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.visitor-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.visitor-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.visitor-name strong {
+  display: block;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visitor-date {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.visitor-info {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+  padding-left: 56px;
+}
+
+.birthday-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.birthday-day {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.birthday-month {
+  font-size: 10px;
+  color: var(--text-light);
+  font-weight: 600;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.birthday-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.birthday-info strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.birthday-contact {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.birthday-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.birthday-card {
+  display: flex;
+  align-items: center;
+  padding: 14px;
+}
+
+.birthdays-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.birthdays-table {
+  display: block;
+}
+
+.mentors-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mentors-cards .person-card {
+  padding: 16px;
+}
+
+@media (max-width: 900px) {
+  .visitors-table {
+    display: none;
+  }
+
+  .birthdays-table {
+    display: none;
+  }
+
+  .birthdays-list {
+    display: flex;
+  }
+}
+
+@media (min-width: 901px) {
+  .birthdays-list {
+    display: none;
+  }
+
+  .birthdays-table {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 12px;
+    padding-top: 80px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: var(--radius-sm);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    padding: 10px 14px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .filters {
+    flex-direction: column;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .filter-select,
+  .search-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .person-card {
+    padding: 16px;
+  }
+
+  .person-name {
+    font-size: 17px;
+  }
+
+  .person-info {
+    font-size: 13px;
+  }
+
+  .person-actions {
+    flex-direction: column;
+  }
+
+  .person-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .chart-bars {
+    height: 120px;
+  }
+
+  .chart-bar {
+    min-width: 24px;
+  }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .person-tags {
+    justify-content: flex-start;
+  }
+
+  .empty-state {
+    padding: 48px 16px;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+  }
+
+  .empty-text {
+    font-size: 16px;
+  }
+
+  .visitor-card {
+    padding: 14px;
+  }
+
+  .visitor-info {
+    padding-left: 0;
+  }
+
+  .visitors-list {
+    gap: 12px;
+  }
+
+  .birthday-card {
+    padding: 12px;
+  }
+
+  .birthday-info strong {
+    font-size: 14px;
+  }
+
+  .backup-notification {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    text-align: center;
+    z-index: 999;
+    font-size: 13px;
+    padding: 12px 16px;
   }
 }
 
 @media (max-width: 480px) {
   .main-content {
-    padding: 12px;
+    padding: 10px;
+    padding-top: 76px;
   }
-  
+
   .page-title {
-    font-size: 20px;
+    font-size: 18px;
   }
-  
+
   .stats-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
-  
+
   .stat-card {
     padding: 12px;
   }
-  
+
   .stat-value {
     font-size: 18px;
   }
-  
+
   .stat-label {
-    font-size: 10px;
+    font-size: 9px;
   }
-  
+
   .card {
-    padding: 16px;
+    padding: 12px;
   }
-  
-  .search-bar {
-    flex-direction: column;
+
+  .people-grid {
+    grid-template-columns: 1fr;
     gap: 12px;
   }
-  
-  .search-input {
-    width: 100%;
-  }
-  
-  .people-grid {
-    gap: 16px;
-  }
-  
+
   .person-card {
     padding: 12px;
   }
-  
+
   .person-name {
     font-size: 16px;
   }
-  
+
   .person-info {
     font-size: 12px;
   }
-  
+
   .tag {
     font-size: 10px;
-    padding: 4px 8px;
+    padding: 3px 8px;
   }
-  
-  /* Mentors */
-  .mentors-table {
+
+  .person-actions .btn {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .visitor-card {
+    padding: 12px;
+  }
+
+  .visitors-list {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding: 8px;
+    padding-top: 72px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .people-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+.overlay {
+  overflow: hidden;
+}
+
+  .public-form-btn-group {
+    flex-direction: column;
+  }
+}
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.birthday-day {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.birthday-month {
+  font-size: 10px;
+  color: var(--text-light);
+  font-weight: 600;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.birthday-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.birthday-info strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.birthday-contact {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.birthday-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.birthday-card {
+  display: flex;
+  align-items: center;
+  padding: 14px;
+}
+
+.birthdays-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.birthdays-table {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .birthdays-table {
     display: none;
   }
-  
-  .mentors-cards {
+
+  .birthdays-list {
     display: flex;
-    flex-direction: column;
+  }
+
+  .birthdays-list {
+    display: flex;
+  }
+
+  .birthdays-table {
+    display: none;
+  }
+}
+
+@media (min-width: 901px) {
+  .birthdays-list {
+    display: none;
+  }
+
+  .birthdays-table {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 12px;
+    padding-top: 80px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: var(--radius-sm);
+  }
+
+  .backup-notification {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    text-align: center;
+    z-index: 999;
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    padding: 10px 14px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .filters {
+    flex-direction: column;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .filter-select,
+  .search-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .person-card {
+    padding: 16px;
+  }
+
+  .person-name {
+    font-size: 17px;
+  }
+
+  .person-info {
+    font-size: 13px;
+  }
+
+  .person-actions {
+    flex-direction: column;
+  }
+
+  .person-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .chart-bars {
+    height: 120px;
+  }
+
+  .chart-bar {
+    min-width: 24px;
+  }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .person-tags {
+    justify-content: flex-start;
+  }
+
+  .empty-state {
+    padding: 48px 16px;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+  }
+
+  .empty-text {
+    font-size: 16px;
+  }
+
+  .visitor-card {
+    padding: 14px;
+  }
+
+  .visitor-info {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 10px;
+    padding-top: 76px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .person-card {
+    padding: 12px;
+  }
+
+  .person-name {
+    font-size: 16px;
+  }
+
+  .person-info {
+    font-size: 12px;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .person-actions .btn {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .visitor-card {
+    padding: 12px;
+  }
+
+  .visitor-name strong {
+    font-size: 14px;
+  }
+
+  .visitors-list {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding: 8px;
+    padding-top: 72px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .people-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
   .mentors-cards .person-card {
     padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 12px;
+    padding-top: 80px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: var(--radius-sm);
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .backup-notification {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    text-align: center;
+    z-index: 999;
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    padding: 10px 14px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .filters {
+    flex-direction: column;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .filter-select,
+  .search-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .person-card {
+    padding: 16px;
+  }
+
+  .person-name {
+    font-size: 17px;
+  }
+
+  .person-info {
+    font-size: 13px;
+  }
+
+  .person-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .person-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .chart-bars {
+    height: 120px;
+  }
+
+  .chart-bar {
+    min-width: 24px;
+  }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .modal {
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .person-tags {
+    justify-content: flex-start;
+  }
+
+  .empty-state {
+    padding: 48px 16px;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+  }
+
+  .empty-text {
+    font-size: 16px;
+  }
+
+  .backup-notification {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 10px;
+    padding-top: 76px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .person-card {
+    padding: 12px;
+  }
+
+  .person-name {
+    font-size: 16px;
+  }
+
+  .person-info {
+    font-size: 12px;
+  }
+
+  .tag {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .person-actions .btn {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding: 8px;
+    padding-top: 72px;
+  }
+
+  .page-title {
+    font-size: 16px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .people-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 

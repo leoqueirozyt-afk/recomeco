@@ -179,65 +179,37 @@ function Visitors() {
               ? `Visitantes de hoje: ${filteredVisitors.length}`
               : `${filteredVisitors.length} visitante(s) encontrado(s)`}
           </div>
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Data da Visita</th>
-                    <th>Nome</th>
-                    <th>WhatsApp</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredVisitors.map(visitor => (
-                    <tr key={visitor.id}>
-                      <td>{visitor.visitDate ? new Date(visitor.visitDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</td>
-                      <td>{visitor.firstName}{visitor.lastName ? ' ' + visitor.lastName : ''}</td>
-                      <td>{visitor.whatsapp || '-'}</td>
-                      <td>
-                        {visitor.sentToRecomeco ? (
-                          <span className="tag tag-baptized">Em Acompanhamento</span>
-                        ) : (
-                          <span className="tag tag-decision">Aguardando Acompanhamento</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="btn-group">
-                          {visitor.whatsapp && (
-                            <a
-                              href={`https://wa.me/${visitor.whatsapp.replace(/\D/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-whatsapp btn-sm"
-                            >
-                              💬
-                            </a>
-                          )}
-                          <button className="btn btn-secondary btn-sm" onClick={() => openEdit(visitor)}>
-                            Editar
-                          </button>
-                          {!visitor.sentToRecomeco ? (
-                            <button className="btn btn-primary btn-sm" onClick={() => handleCompleteRegistration(visitor)}>
-                              Completar Cadastro
-                            </button>
-                          ) : (
-                            <button className="btn btn-primary btn-sm" onClick={() => handleViewRegistration(visitor)}>
-                              Ver Cadastro Completo
-                            </button>
-                          )}
-                          <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(visitor.id)}>
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+          <div className="visitors-list">
+            {filteredVisitors.map(visitor => (
+              <div key={visitor.id} className="person-card visitor-card">
+                <div className="visitor-header">
+                  <div className="visitor-avatar">{visitor.firstName?.charAt(0)?.toUpperCase()}</div>
+                  <div className="visitor-name">
+                    <strong>{visitor.firstName}{visitor.lastName ? ' ' + visitor.lastName : ''}</strong>
+                    <span className="visitor-date">{visitor.visitDate ? new Date(visitor.visitDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</span>
+                  </div>
+                  <span className={`tag ${visitor.sentToRecomeco ? 'tag-baptized' : 'tag-decision'}`}>
+                    {visitor.sentToRecomeco ? 'Em Acompanhamento' : 'Aguardando'}
+                  </span>
+                </div>
+                <div className="visitor-info">
+                  {visitor.whatsapp && <span>📱 {visitor.whatsapp}</span>}
+                </div>
+                <div className="person-actions">
+                  {visitor.whatsapp && (
+                    <a href={`https://wa.me/${visitor.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-sm">💬</a>
+                  )}
+                  <button className="btn btn-secondary btn-sm" onClick={() => openEdit(visitor)}>Editar</button>
+                  {!visitor.sentToRecomeco ? (
+                    <button className="btn btn-primary btn-sm" onClick={() => handleCompleteRegistration(visitor)}>Completar</button>
+                  ) : (
+                    <button className="btn btn-primary btn-sm" onClick={() => handleViewRegistration(visitor)}>Ver</button>
+                  )}
+                  <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(visitor.id)}>Excluir</button>
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}

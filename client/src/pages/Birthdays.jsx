@@ -115,7 +115,29 @@ function Birthdays() {
           <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-light)' }}>
             {filtered.length} aniversariante(s) em {MESES[selectedMonth]}
           </div>
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="birthdays-list">
+            {filtered.map(m => (
+              <div key={m.id} className="person-card birthday-card">
+                <div className="birthday-left">
+                  <div className="birthday-day">{parseInt(m.birthDate.split('-').pop(), 10)}</div>
+                  <div className="birthday-month">{MESES[parseInt(m.birthDate.split('-')[1], 10) - 1].substring(0, 3)}</div>
+                </div>
+                <div className="birthday-info">
+                  <strong>{m.fullName}</strong>
+                  <div className="birthday-contact">
+                    {m.memberType === 'Adulto' ? (m.phone || '-') : (m.responsibleContact || m.responsibleName || '-')}
+                  </div>
+                  <div className="birthday-tags">
+                    <span className={`tag ${m.memberType === 'Adulto' ? 'tag-primary' : 'tag-secondary'}`}>{m.memberType}</span>
+                    {(m.gds || m.childGds) && <span className="tag tag-care">{m.gds || m.childGds}</span>}
+                    {(m.allergy || m.childAllergy) && <span className="tag tag-care">⚠️ Alergia</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="card birthdays-table" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="table-container">
               <table className="table">
                 <thead>

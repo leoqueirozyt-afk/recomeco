@@ -186,17 +186,17 @@ function PublicMemberRegistration() {
   const errorStyle = { color: '#dc143c', fontSize: '12px', marginTop: '4px' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)', padding: '20px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <img src="/logo.png" alt="Recomeço" style={{ width: '80px', height: '80px', borderRadius: '16px', marginBottom: '16px' }} />
-          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#fff', marginBottom: '8px' }}>Recomeço</h1>
-          <p style={{ color: '#dc143c', fontWeight: '600', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Ministério Recomeço</p>
-          <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', marginTop: '8px' }}>Cadastro de Membros</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>Preencha seus dados para cadastro na igreja.</p>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)', padding: '16px' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img src="/logo.png" alt="Recomeço" style={{ width: '64px', height: '64px', borderRadius: '14px', marginBottom: '12px' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#fff', marginBottom: '6px' }}>Recomeço</h1>
+          <p style={{ color: '#dc143c', fontWeight: '600', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>Ministério Recomeço</p>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', marginTop: '6px' }}>Cadastro de Membros</h2>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Preencha seus dados para cadastro na igreja.</p>
         </div>
 
-        <div style={{ background: '#fff', borderRadius: '20px', padding: '40px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+        <div style={{ background: '#fff', borderRadius: '18px', padding: '28px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
           {success && (
             <div style={{ background: 'rgba(39, 174, 96, 0.1)', border: '1px solid #27ae60', color: '#27ae60', padding: '16px 20px', borderRadius: '12px', marginBottom: '24px', fontWeight: '600', textAlign: 'center' }}>
               Cadastro realizado com sucesso.
@@ -211,7 +211,7 @@ function PublicMemberRegistration() {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '24px' }}>
               <label style={labelStyle}>Tipo de cadastro *</label>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="public-form-btn-group">
                 <button type="button" onClick={() => { setMemberType('Adulto'); setSuccess(false); }} style={{ flex: 1, padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', border: memberType === 'Adulto' ? '2px solid #dc143c' : '2px solid #e0e0e0', background: memberType === 'Adulto' ? '#fff5f5' : '#fafafa', color: memberType === 'Adulto' ? '#dc143c' : '#555' }}>Adulto</button>
                 <button type="button" onClick={() => { setMemberType('Criança'); setSuccess(false); }} style={{ flex: 1, padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', border: memberType === 'Criança' ? '2px solid #dc143c' : '2px solid #e0e0e0', background: memberType === 'Criança' ? '#fff5f5' : '#fafafa', color: memberType === 'Criança' ? '#dc143c' : '#555' }}>Criança</button>
               </div>
@@ -227,7 +227,7 @@ function PublicMemberRegistration() {
                   {fieldErrors.fullName && <p style={errorStyle}>{fieldErrors.fullName}</p>}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>Estado civil</label>
                     <select value={adultForm.maritalStatus} onChange={e => handleAdultChange('maritalStatus', e.target.value)} style={inputStyle()}>
@@ -246,7 +246,7 @@ function PublicMemberRegistration() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>Data de nascimento</label>
                     <input type="date" value={adultForm.birthDate} onChange={e => handleAdultChange('birthDate', e.target.value)} style={inputStyle()} />
@@ -258,14 +258,19 @@ function PublicMemberRegistration() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>CEP</label>
                     <input type="text" value={adultForm.zipCode} onChange={e => handleZipCodeChange(setAdultForm, adultForm, 'zipCode', e.target.value)} placeholder="00000-000" maxLength={9} style={inputStyle()} />
                   </div>
                   <div>
                     <label style={labelStyle}>UF</label>
-                    <input type="text" value={adultForm.state} onChange={e => handleAdultChange('state', e.target.value.toUpperCase())} placeholder="SP" maxLength={2} style={inputStyle()} />
+                    <select value={adultForm.state} onChange={e => handleAdultChange('state', e.target.value.toUpperCase())} style={inputStyle()}>
+                      <option value="">UF</option>
+                      {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 {cepMessage && memberType === 'Adulto' && <p style={{ color: cepMessage.includes('não') || cepMessage.includes('encontrado') ? '#e67e22' : '#555', fontSize: '12px', marginBottom: '12px' }}>{cepMessage}</p>}
@@ -275,7 +280,7 @@ function PublicMemberRegistration() {
                   <input type="text" value={adultForm.street} onChange={e => handleAdultChange('street', e.target.value)} placeholder="Rua, número, bairro" style={inputStyle()} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+                <div className="public-form-row-3" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>Número</label>
                     <input type="text" value={adultForm.number} onChange={e => handleAdultChange('number', e.target.value)} placeholder="Número" style={inputStyle()} />
@@ -310,7 +315,7 @@ function PublicMemberRegistration() {
 
                 <div style={{ marginBottom: '18px' }}>
                   <label style={labelStyle}>Você faz parte da liderança da igreja?</label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="public-form-btn-group">
                     <button type="button" onClick={() => handleAdultChange('isLeadership', 'true')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.isLeadership === 'true' ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.isLeadership === 'true' ? '#fff5f5' : '#fafafa', color: adultForm.isLeadership === 'true' ? '#dc143c' : '#555' }}>Sim</button>
                     <button type="button" onClick={() => handleAdultChange('isLeadership', 'false')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.isLeadership === 'false' ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.isLeadership === 'false' ? '#fff5f5' : '#fafafa', color: adultForm.isLeadership === 'false' ? '#dc143c' : '#555' }}>Não</button>
                   </div>
@@ -318,7 +323,7 @@ function PublicMemberRegistration() {
 
                 <div style={{ marginBottom: '18px' }}>
                   <label style={labelStyle}>Batizado?</label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="public-form-btn-group">
                     <button type="button" onClick={() => handleAdultChange('baptized', 'true')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.baptized === 'true' ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.baptized === 'true' ? '#fff5f5' : '#fafafa', color: adultForm.baptized === 'true' ? '#dc143c' : '#555' }}>Sim</button>
                     <button type="button" onClick={() => handleAdultChange('baptized', 'false')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.baptized === 'false' ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.baptized === 'false' ? '#fff5f5' : '#fafafa', color: adultForm.baptized === 'false' ? '#dc143c' : '#555' }}>Não</button>
                   </div>
@@ -326,7 +331,7 @@ function PublicMemberRegistration() {
 
                 <div style={{ marginBottom: '18px' }}>
                   <label style={labelStyle}>Possui alguma alergia?</label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="public-form-btn-group">
                     <button type="button" onClick={() => { handleAdultChange('hasAllergy', true); if (!adultForm.allergy) handleAdultChange('allergy', ''); }} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.hasAllergy === true ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.hasAllergy === true ? '#fff5f5' : '#fafafa', color: adultForm.hasAllergy === true ? '#dc143c' : '#555' }}>Sim</button>
                     <button type="button" onClick={() => handleAdultChange('hasAllergy', false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: adultForm.hasAllergy === false ? '2px solid #dc143c' : '2px solid #e0e0e0', background: adultForm.hasAllergy === false ? '#fff5f5' : '#fafafa', color: adultForm.hasAllergy === false ? '#dc143c' : '#555' }}>Não</button>
                   </div>
@@ -348,7 +353,7 @@ function PublicMemberRegistration() {
 
             {memberType === 'Criança' && (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>Nome *</label>
                     <input type="text" value={childForm.fullName} onChange={e => handleChildChange('fullName', e.target.value)} placeholder="Nome da criança" required style={inputStyle(!!fieldErrors.fullName)} />
@@ -360,7 +365,7 @@ function PublicMemberRegistration() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>Nome do responsável</label>
                     <input type="text" value={childForm.responsibleName} onChange={e => handleChildChange('responsibleName', e.target.value)} placeholder="Nome do responsável" style={inputStyle()} />
@@ -372,7 +377,7 @@ function PublicMemberRegistration() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>CPF</label>
                     <input type="text" value={childForm.cpf} onChange={e => handleCpfChange(setChildForm, childForm, 'cpf', e.target.value)} placeholder="000.000.000-00" maxLength={14} style={inputStyle(!!fieldErrors.cpf)} />
@@ -392,14 +397,19 @@ function PublicMemberRegistration() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div className="public-form-row" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>CEP</label>
                     <input type="text" value={childForm.zipCode} onChange={e => handleZipCodeChange(setChildForm, childForm, 'zipCode', e.target.value)} placeholder="00000-000" maxLength={9} style={inputStyle()} />
                   </div>
                   <div>
                     <label style={labelStyle}>UF</label>
-                    <input type="text" value={childForm.state} onChange={e => handleChildChange('state', e.target.value.toUpperCase())} placeholder="SP" maxLength={2} style={inputStyle()} />
+                    <select value={childForm.state} onChange={e => handleChildChange('state', e.target.value.toUpperCase())} style={inputStyle()}>
+                      <option value="">UF</option>
+                      {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 {cepMessage && memberType === 'Criança' && <p style={{ color: cepMessage.includes('não') || cepMessage.includes('encontrado') ? '#e67e22' : '#555', fontSize: '12px', marginBottom: '12px' }}>{cepMessage}</p>}
@@ -409,7 +419,7 @@ function PublicMemberRegistration() {
                   <input type="text" value={childForm.street} onChange={e => handleChildChange('street', e.target.value)} placeholder="Rua, número, bairro" style={inputStyle()} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+                <div className="public-form-row-3" style={{ marginBottom: '18px' }}>
                   <div>
                     <label style={labelStyle}>Endereço</label>
                     <input type="text" value={childForm.number} onChange={e => handleChildChange('number', e.target.value)} placeholder="Número" style={inputStyle()} />
@@ -431,7 +441,7 @@ function PublicMemberRegistration() {
 
                 <div style={{ marginBottom: '18px' }}>
                   <label style={labelStyle}>Possui alguma alergia?</label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="public-form-btn-group">
                     <button type="button" onClick={() => { handleChildChange('hasAllergy', true); if (!childForm.allergy) handleChildChange('allergy', ''); }} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: childForm.hasAllergy === true ? '2px solid #dc143c' : '2px solid #e0e0e0', background: childForm.hasAllergy === true ? '#fff5f5' : '#fafafa', color: childForm.hasAllergy === true ? '#dc143c' : '#555' }}>Sim</button>
                     <button type="button" onClick={() => handleChildChange('hasAllergy', false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', border: childForm.hasAllergy === false ? '2px solid #dc143c' : '2px solid #e0e0e0', background: childForm.hasAllergy === false ? '#fff5f5' : '#fafafa', color: childForm.hasAllergy === false ? '#dc143c' : '#555' }}>Não</button>
                   </div>
