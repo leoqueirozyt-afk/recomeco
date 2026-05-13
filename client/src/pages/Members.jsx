@@ -27,6 +27,13 @@ function Members() {
     birth_date: '',
     phone: '',
     full_address: '',
+    zip_code: '',
+    street: '',
+    address_number: '',
+    address_complement: '',
+    neighborhood: '',
+    city: '',
+    state: '',
     marital_status: '',
     gds: '',
     is_leadership: false,
@@ -154,7 +161,14 @@ function Members() {
         child_allergy: full.childAllergy || '',
         member_status: full.memberStatus || 'Ativo',
         care_status: full.careStatus || 'Sem cuidado ativo',
-        notes: full.notes || ''
+        notes: full.notes || '',
+        zip_code: full.zipCode || '',
+        street: full.street || '',
+        address_number: full.addressNumber || '',
+        address_complement: full.addressComplement || '',
+        neighborhood: full.neighborhood || '',
+        city: full.city || '',
+        state: full.state || ''
       });
       setShowModal(true);
     } catch (err) {
@@ -167,6 +181,8 @@ function Members() {
     setForm({
       member_type: 'Adulto',
       full_name: '', cpf: '', birth_date: '', phone: '', full_address: '',
+      zip_code: '', street: '', address_number: '', address_complement: '',
+      neighborhood: '', city: '', state: '',
       marital_status: '', gds: '', is_leadership: false, baptized: false, allergy: '',
       responsible_name: '', responsible_contact: '', child_gds: '', child_allergy: '',
       member_status: 'Ativo', care_status: 'Sem cuidado ativo', notes: ''
@@ -413,6 +429,12 @@ function Members() {
                       </td>
                       <td>
                         {m.birthDate ? new Date(m.birthDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
+                        {m.memberType === 'Adulto' && m.allergy && (
+                          <div style={{ fontSize: '10px', color: '#856404', fontWeight: '600', marginTop: '2px' }}>⚠️ {m.allergy}</div>
+                        )}
+                        {m.memberType === 'Criança' && m.childAllergy && (
+                          <div style={{ fontSize: '10px', color: '#856404', fontWeight: '600', marginTop: '2px' }}>⚠️ {m.childAllergy}</div>
+                        )}
                       </td>
                       <td>{m.gds || m.childGds || '-'}</td>
                       <td>
@@ -451,7 +473,7 @@ function Members() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal" style={{ maxWidth: '600px' }}>
+          <div className="modal" style={{ maxWidth: '680px' }}>
             <div className="modal-header">
               <h2 className="modal-title">{editingMember ? 'Editar Membro' : 'Novo Membro'}</h2>
               <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
@@ -515,29 +537,63 @@ function Members() {
                         onChange={(e) => handleFormChange('phone', e.target.value)} placeholder="(11) 99999-9999" />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Endereço completo</label>
-                    <input type="text" className="form-input" value={form.full_address}
-                      onChange={(e) => handleFormChange('full_address', e.target.value)} placeholder="Rua, número, bairro, cidade" />
-                  </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label className="form-label">GDS</label>
-                      <select className="form-select" value={form.gds} onChange={(e) => handleFormChange('gds', e.target.value)}>
-                        <option value="">Selecione</option>
-                        <option value="Jovens Aljava">Jovens Aljava</option>
-                        <option value="Mulheres de Sião">Mulheres de Sião</option>
-                        <option value="Homens de Honra">Homens de Honra</option>
-                        <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
-                        <option value="Herdeiros de Sião">Herdeiros de Sião</option>
-                        <option value="Nenhum">Nenhum</option>
-                      </select>
+                      <label className="form-label">CEP</label>
+                      <input type="text" className="form-input" value={form.zip_code}
+                        onChange={(e) => handleFormChange('zip_code', e.target.value)} placeholder="00000-000" maxLength={9} />
                     </div>
                     <div className="form-group">
                       <label className="form-label">Liderança</label>
                       <select className="form-select" value={String(form.is_leadership)} onChange={(e) => handleFormChange('is_leadership', e.target.value === 'true')}>
                         <option value="false">Não</option>
                         <option value="true">Sim</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 3 }}>
+                      <label className="form-label">Rua</label>
+                      <input type="text" className="form-input" value={form.street}
+                        onChange={(e) => handleFormChange('street', e.target.value)} placeholder="Nome da rua" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">Número</label>
+                      <input type="text" className="form-input" value={form.address_number}
+                        onChange={(e) => handleFormChange('address_number', e.target.value)} placeholder="Nº" />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Complemento</label>
+                      <input type="text" className="form-input" value={form.address_complement}
+                        onChange={(e) => handleFormChange('address_complement', e.target.value)} placeholder="Apto, bloco, etc." />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Bairro</label>
+                      <input type="text" className="form-input" value={form.neighborhood}
+                        onChange={(e) => handleFormChange('neighborhood', e.target.value)} placeholder="Bairro" />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <label className="form-label">Cidade</label>
+                      <input type="text" className="form-input" value={form.city}
+                        onChange={(e) => handleFormChange('city', e.target.value)} placeholder="Cidade" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">UF</label>
+                      <select className="form-select" value={form.state} onChange={(e) => handleFormChange('state', e.target.value)}>
+                        <option value="">UF</option>
+                        <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                        <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                        <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                        <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                        <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                        <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                        <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                        <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                        <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
                       </select>
                     </div>
                   </div>
@@ -554,6 +610,18 @@ function Members() {
                       <input type="text" className="form-input" value={form.allergy}
                         onChange={(e) => handleFormChange('allergy', e.target.value)} placeholder="Ex: Frutos do mar" />
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">GDS</label>
+                    <select className="form-select" value={form.gds} onChange={(e) => handleFormChange('gds', e.target.value)}>
+                      <option value="">Selecione</option>
+                      <option value="Jovens Aljava">Jovens Aljava</option>
+                      <option value="Mulheres de Sião">Mulheres de Sião</option>
+                      <option value="Homens de Honra">Homens de Honra</option>
+                      <option value="Ovelhinhas de Sião">Ovelhinhas de Sião</option>
+                      <option value="Herdeiros de Sião">Herdeiros de Sião</option>
+                      <option value="Nenhum">Nenhum</option>
+                    </select>
                   </div>
                 </>
               ) : (
@@ -601,10 +669,63 @@ function Members() {
                         onChange={(e) => handleFormChange('child_allergy', e.target.value)} placeholder="Ex: Lactose" />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Endereço completo</label>
-                    <input type="text" className="form-input" value={form.full_address}
-                      onChange={(e) => handleFormChange('full_address', e.target.value)} placeholder="Rua, número, bairro, cidade" />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">CEP</label>
+                      <input type="text" className="form-input" value={form.zip_code}
+                        onChange={(e) => handleFormChange('zip_code', e.target.value)} placeholder="00000-000" maxLength={9} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Alergia</label>
+                      <input type="text" className="form-input" value={form.child_allergy}
+                        onChange={(e) => handleFormChange('child_allergy', e.target.value)} placeholder="Ex: Lactose" />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 3 }}>
+                      <label className="form-label">Rua</label>
+                      <input type="text" className="form-input" value={form.street}
+                        onChange={(e) => handleFormChange('street', e.target.value)} placeholder="Nome da rua" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">Número</label>
+                      <input type="text" className="form-input" value={form.address_number}
+                        onChange={(e) => handleFormChange('address_number', e.target.value)} placeholder="Nº" />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Complemento</label>
+                      <input type="text" className="form-input" value={form.address_complement}
+                        onChange={(e) => handleFormChange('address_complement', e.target.value)} placeholder="Apto, bloco, etc." />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Bairro</label>
+                      <input type="text" className="form-input" value={form.neighborhood}
+                        onChange={(e) => handleFormChange('neighborhood', e.target.value)} placeholder="Bairro" />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <label className="form-label">Cidade</label>
+                      <input type="text" className="form-input" value={form.city}
+                        onChange={(e) => handleFormChange('city', e.target.value)} placeholder="Cidade" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label className="form-label">UF</label>
+                      <select className="form-select" value={form.state} onChange={(e) => handleFormChange('state', e.target.value)}>
+                        <option value="">UF</option>
+                        <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                        <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                        <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                        <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                        <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                        <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                        <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                        <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                        <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                      </select>
+                    </div>
                   </div>
                 </>
               )}
@@ -655,6 +776,16 @@ function Members() {
                 <div><strong>Nome:</strong> {detailMember.fullName}</div>
                 <div><strong>Tipo:</strong> {detailMember.memberType}</div>
               </div>
+              {detailMember.memberType === 'Adulto' && detailMember.allergy && (
+                <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '10px 14px' }}>
+                  <strong style={{ color: '#856404' }}>⚠️ Alergia:</strong> <span style={{ color: '#856404', fontWeight: '600' }}>{detailMember.allergy}</span>
+                </div>
+              )}
+              {!detailMember.memberType || detailMember.memberType === 'Criança' && detailMember.childAllergy && (
+                <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px', padding: '10px 14px' }}>
+                  <strong style={{ color: '#856404' }}>⚠️ Alergia:</strong> <span style={{ color: '#856404', fontWeight: '600' }}>{detailMember.childAllergy}</span>
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div><strong>CPF:</strong> {detailMember.cpf || '-'}</div>
                 <div><strong>Nascimento:</strong> {detailMember.birthDate ? new Date(detailMember.birthDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</div>
@@ -690,7 +821,16 @@ function Members() {
                 <div><strong>Status:</strong> {detailMember.memberStatus}</div>
                 <div><strong>Cuidado:</strong> {detailMember.careStatus}</div>
               </div>
-              {detailMember.fullAddress && <div><strong>Endereço:</strong> {detailMember.fullAddress}</div>}
+              {(detailMember.street || detailMember.neighborhood || detailMember.city) && (
+                <div style={{ background: '#f8f9fa', borderRadius: '8px', padding: '12px', border: '1px solid #e0e0e0' }}>
+                  <strong>Endereço:</strong>
+                  <div style={{ marginTop: '6px', fontSize: '13px', lineHeight: '1.6' }}>
+                    {detailMember.street && <div>{detailMember.street}{detailMember.addressNumber ? `, ${detailMember.addressNumber}` : ''}{detailMember.addressComplement ? ` - ${detailMember.addressComplement}` : ''}</div>}
+                    {detailMember.neighborhood && <div>{detailMember.neighborhood}</div>}
+                    <div>{detailMember.city || ''}{detailMember.city && detailMember.state ? ' - ' : ''}{detailMember.state || ''}{detailMember.zipCode ? `  ${detailMember.zipCode}` : ''}</div>
+                  </div>
+                </div>
+              )}
               {detailMember.notes && <div><strong>Observações:</strong> {detailMember.notes}</div>}
             </div>
             <button className="btn btn-secondary" style={{ marginTop: '16px' }} onClick={() => setShowDetail(false)}>Fechar</button>
