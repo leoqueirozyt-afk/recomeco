@@ -45,10 +45,15 @@ function BecomeMemberForm() {
       setPerson(p);
       setForm(prev => ({
         ...prev,
-        cpf: p.contact || '',
         phone: p.contact || '',
         birth_date: p.birthDate || '',
-        full_address: p.fullAddress || '',
+        zip_code: p.zipCode || '',
+        street: p.street || '',
+        address_number: p.addressNumber || '',
+        address_complement: p.addressComplement || '',
+        neighborhood: p.neighborhood || '',
+        city: p.city || '',
+        state: p.state || '',
         notes: p.notes || ''
       }));
     } catch (err) {
@@ -68,7 +73,7 @@ function BecomeMemberForm() {
     try {
       await becomeMember(id, form);
       alert('Membro criado com sucesso!');
-      navigate('/people');
+      navigate('/members');
     } catch (err) {
       alert('Erro ao criar membro: ' + err.message);
     } finally {

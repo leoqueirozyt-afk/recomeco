@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS people (
     decision_month TEXT,
     full_name TEXT NOT NULL,
     birth_date DATE,
-    full_address TEXT,
     contact TEXT,
     gender TEXT,
     baptized BOOLEAN DEFAULT false,
@@ -58,6 +57,13 @@ CREATE TABLE IF NOT EXISTS people (
     notes TEXT,
     visitor_id UUID REFERENCES visitors(id) ON DELETE SET NULL,
     care_start_date DATE,
+    zip_code TEXT,
+    street TEXT,
+    address_number TEXT,
+    address_complement TEXT,
+    neighborhood TEXT,
+    city TEXT,
+    state TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -144,7 +150,6 @@ SELECT
     p.decision_month,
     p.full_name,
     p.birth_date,
-    p.full_address,
     p.contact,
     p.gender,
     p.baptized,
@@ -153,6 +158,14 @@ SELECT
     p.final_decision,
     p.notes,
     p.visitor_id,
+    p.care_start_date,
+    p.zip_code,
+    p.street,
+    p.address_number,
+    p.address_complement,
+    p.neighborhood,
+    p.city,
+    p.state,
     p.created_at,
     p.updated_at,
     STRING_AGG(DISTINCT m.full_name, ', ' ORDER BY m.full_name) AS mentors
@@ -284,3 +297,16 @@ END
 $$;
 
 CREATE INDEX IF NOT EXISTS idx_people_visitor_id ON people(visitor_id);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'people' AND column_name = 'zip_code') THEN
+        ALTER TABLE people ADD COLUMN zip_code TEXT;
+        ALTER TABLE people ADD COLUMN street TEXT;
+        ALTER TABLE people ADD COLUMN address_number TEXT;
+        ALTER TABLE people ADD COLUMN address_complement TEXT;
+        ALTER TABLE people ADD COLUMN neighborhood TEXT;
+        ALTER TABLE people ADD COLUMN city TEXT;
+        ALTER TABLE people ADD COLUMN state TEXT;
+    END IF;
+END $$;

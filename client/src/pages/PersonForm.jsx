@@ -22,7 +22,6 @@ function PersonForm() {
     decisionDate: '',
     fullName: '',
     birthDate: '',
-    fullAddress: '',
     contact: '',
     gender: '',
     baptized: 'Não',
@@ -32,7 +31,14 @@ function PersonForm() {
     photo: '',
     notes: '',
     mentorIds: [],
-    careStartDate: new Date().toISOString().split('T')[0]
+    careStartDate: new Date().toISOString().split('T')[0],
+    zipCode: '',
+    street: '',
+    addressNumber: '',
+    addressComplement: '',
+    neighborhood: '',
+    city: '',
+    state: ''
   });
 
   useEffect(() => {
@@ -64,7 +70,6 @@ function PersonForm() {
           decisionDate: person.decisionDate || '',
           fullName: person.fullName || '',
           birthDate: person.birthDate || '',
-          fullAddress: person.fullAddress || '',
           contact: person.contact || '',
           gender: person.gender || '',
           baptized: person.baptized || 'Não',
@@ -74,7 +79,14 @@ function PersonForm() {
           photo: person.photo || '',
           notes: person.notes || '',
           mentorIds,
-          careStartDate: person.careStartDate || new Date().toISOString().split('T')[0]
+          careStartDate: person.careStartDate || new Date().toISOString().split('T')[0],
+          zipCode: person.zipCode || '',
+          street: person.street || '',
+          addressNumber: person.addressNumber || '',
+          addressComplement: person.addressComplement || '',
+          neighborhood: person.neighborhood || '',
+          city: person.city || '',
+          state: person.state || ''
         });
       }
     } catch (error) {
@@ -93,6 +105,26 @@ function PersonForm() {
       const monthIndex = date.getMonth();
       const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       setForm(prev => ({ ...prev, decisionMonth: months[monthIndex] }));
+    }
+
+    if (name === 'zipCode') {
+      const cleaned = value.replace(/\D/g, '');
+      if (cleaned.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cleaned}/json/`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.erro) {
+              setForm(prev => ({
+                ...prev,
+                street: data.logradouro || prev.street,
+                neighborhood: data.bairro || prev.neighborhood,
+                city: data.localidade || prev.city,
+                state: data.uf || prev.state
+              }));
+            }
+          })
+          .catch(() => {});
+      }
     }
   };
 
@@ -267,15 +299,94 @@ function PersonForm() {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Endereço Completo</label>
+          <label className="form-label">CEP</label>
           <input
             type="text"
-            name="fullAddress"
+            name="zipCode"
             className="form-input"
-            value={form.fullAddress}
+            value={form.zipCode}
             onChange={handleChange}
-            placeholder="Rua, número, bairro, cidade..."
+            placeholder="00000-000"
+            maxLength={9}
           />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group" style={{ flex: 3 }}>
+            <label className="form-label">Rua</label>
+            <input
+              type="text"
+              name="street"
+              className="form-input"
+              value={form.street}
+              onChange={handleChange}
+              placeholder="Nome da rua"
+            />
+          </div>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label className="form-label">Número</label>
+            <input
+              type="text"
+              name="addressNumber"
+              className="form-input"
+              value={form.addressNumber}
+              onChange={handleChange}
+              placeholder="Nº"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">Complemento</label>
+            <input
+              type="text"
+              name="addressComplement"
+              className="form-input"
+              value={form.addressComplement}
+              onChange={handleChange}
+              placeholder="Apto, bloco..."
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Bairro</label>
+            <input
+              type="text"
+              name="neighborhood"
+              className="form-input"
+              value={form.neighborhood}
+              onChange={handleChange}
+              placeholder="Bairro"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group" style={{ flex: 2 }}>
+            <label className="form-label">Cidade</label>
+            <input
+              type="text"
+              name="city"
+              className="form-input"
+              value={form.city}
+              onChange={handleChange}
+              placeholder="Cidade"
+            />
+          </div>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label className="form-label">UF</label>
+            <select
+              name="state"
+              className="form-select"
+              value={form.state}
+              onChange={handleChange}
+            >
+              <option value="">UF</option>
+              {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
+                <option key={uf} value={uf}>{uf}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <h3 style={{ marginTop: '32px', marginBottom: '20px', color: 'var(--primary)' }}>Acompanhamento</h3>

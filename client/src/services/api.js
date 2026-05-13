@@ -197,7 +197,7 @@ export const updateVisitor = (id, data) => api.put(`/api/visitors/${id}`, data);
 export const deleteVisitor = (id) => api.delete(`/api/visitors/${id}`);
 export const completeVisitorRegistration = (visitorId, data) => api.post(`/api/visitors/${visitorId}/complete-registration`, data);
 export const sendVisitorToRecomeco = (id) => api.post(`/api/visitors/${id}/send-to-recomeco`, {});
-export const becomeMember = (personId) => api.post(`/api/people/${personId}/become-member`, {});
+export const becomeMember = (personId, memberData = {}) => api.post(`/api/people/${personId}/become-member`, memberData);
 
 export const getMembers = (filters = {}) => {
   const params = new URLSearchParams();

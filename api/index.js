@@ -254,7 +254,6 @@ function mapPerson(row) {
     decisionMonth: row.decision_month,
     fullName: row.full_name,
     birthDate: row.birth_date,
-    fullAddress: row.full_address,
     contact: row.contact,
     gender: row.gender,
     baptized: row.baptized ? 'Sim' : 'Não',
@@ -266,6 +265,13 @@ function mapPerson(row) {
     visitorId: row.visitor_id,
     mentors: row.mentors || '',
     careStartDate: row.care_start_date,
+    zipCode: row.zip_code || '',
+    street: row.street || '',
+    addressNumber: row.address_number || '',
+    addressComplement: row.address_complement || '',
+    neighborhood: row.neighborhood || '',
+    city: row.city || '',
+    state: row.state || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -517,7 +523,6 @@ app.post('/api/people', requireSupabase, async (req, res) => {
         decision_month: req.body.decisionMonth || null,
         full_name: req.body.fullName,
         birth_date: req.body.birthDate || null,
-        full_address: req.body.fullAddress || null,
         contact: req.body.contact || null,
         gender: req.body.gender || null,
         baptized: req.body.baptized === 'Sim',
@@ -525,7 +530,14 @@ app.post('/api/people', requireSupabase, async (req, res) => {
         disciple_status: req.body.discipleStatus || 'Em cuidado',
         final_decision: req.body.finalDecision || 'Em acompanhamento',
         notes: req.body.notes || null,
-        care_start_date: req.body.careStartDate || new Date().toISOString().split('T')[0]
+        care_start_date: req.body.careStartDate || new Date().toISOString().split('T')[0],
+        zip_code: req.body.zipCode || null,
+        street: req.body.street || null,
+        address_number: req.body.addressNumber || null,
+        address_complement: req.body.addressComplement || null,
+        neighborhood: req.body.neighborhood || null,
+        city: req.body.city || null,
+        state: req.body.state || null
       })
       .select()
       .single();
@@ -555,7 +567,6 @@ app.put('/api/people/:id', requireSupabase, async (req, res) => {
         decision_month: req.body.decisionMonth || null,
         full_name: req.body.fullName,
         birth_date: req.body.birthDate || null,
-        full_address: req.body.fullAddress || null,
         contact: req.body.contact || null,
         gender: req.body.gender || null,
         baptized: req.body.baptized === 'Sim',
@@ -564,6 +575,13 @@ app.put('/api/people/:id', requireSupabase, async (req, res) => {
         final_decision: req.body.finalDecision || 'Em acompanhamento',
         notes: req.body.notes || null,
         care_start_date: req.body.careStartDate || null,
+        zip_code: req.body.zipCode || null,
+        street: req.body.street || null,
+        address_number: req.body.addressNumber || null,
+        address_complement: req.body.addressComplement || null,
+        neighborhood: req.body.neighborhood || null,
+        city: req.body.city || null,
+        state: req.body.state || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', req.params.id);
@@ -1349,21 +1367,47 @@ app.post('/api/people/:id/become-member', requireSupabase, authenticateToken, as
       return res.status(409).json({ ok: false, error: 'Esta pessoa já está cadastrada como membro.' });
     }
 
+    const data = req.body || {};
+    const isAdult = data.member_type !== 'Criança';
+
+    const insertData = {
+      member_type: data.member_type || 'Adulto',
+      full_name: person.full_name,
+      first_name: (person.full_name || '').split(' ')[0],
+      last_name: (person.full_name || '').split(' ').slice(1).join(' '),
+      birth_date: data.birth_date || person.birth_date || null,
+      phone: data.phone || person.contact || null,
+      cpf: data.cpf || null,
+      zip_code: data.zip_code || person.zip_code || null,
+      street: data.street || person.street || null,
+      address_number: data.address_number || person.address_number || null,
+      address_complement: data.address_complement || person.address_complement || null,
+      neighborhood: data.neighborhood || person.neighborhood || null,
+      city: data.city || person.city || null,
+      state: data.state || person.state || null,
+      baptized: data.baptized === true || data.baptized === 'true' || data.baptized === 'Sim' || false,
+      member_status: 'Ativo',
+      care_status: isAdult ? 'Sem cuidado ativo' : 'Sem cuidado ativo',
+      source: 'Veio do Recomeço',
+      person_id: person.id,
+      notes: data.notes || ''
+    };
+
+    if (isAdult) {
+      insertData.marital_status = data.marital_status || null;
+      insertData.gds = data.gds || null;
+      insertData.is_leadership = data.is_leadership === true || data.is_leadership === 'true';
+      insertData.allergy = data.has_allergy ? (data.allergy || null) : null;
+    } else {
+      insertData.responsible_name = data.responsible_name || null;
+      insertData.responsible_contact = data.responsible_contact || null;
+      insertData.child_gds = data.child_gds || null;
+      insertData.child_allergy = data.child_has_allergy ? (data.child_allergy || null) : null;
+    }
+
     const { data: member, error: memberError } = await supabase
       .from('members')
-      .insert({
-        member_type: 'Adulto',
-        full_name: person.full_name,
-        birth_date: person.birth_date || null,
-        phone: person.contact || null,
-        full_address: person.full_address || null,
-        baptized: person.baptized || false,
-        person_id: person.id,
-        source: 'Veio do Recomeço',
-        member_status: 'Ativo',
-        care_status: 'Acompanhamento finalizado',
-        notes: 'Membro criado a partir do acompanhamento do Recomeço.'
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -1373,9 +1417,11 @@ app.post('/api/people/:id/become-member', requireSupabase, authenticateToken, as
       await supabase.from('visitors').delete().eq('id', person.visitor_id);
     }
 
+    await supabase.from('people').delete().eq('id', personId);
+
     res.status(201).json({
       ok: true,
-      message: 'Pessoa adicionada à lista de membros com sucesso.',
+      message: 'Pessoa adicionada à lista de membros e removida do Recomeço.',
       member: mapMember(member, true)
     });
   } catch (error) {
