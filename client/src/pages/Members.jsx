@@ -111,9 +111,7 @@ function Members() {
       await setMemberStatus(member.id, newStatus);
     } catch (err) {
       console.error('Erro ao alterar status:', err);
-      setMembers(prev => prev.map(m =>
-        m.id === member.id ? { ...m, memberStatus: member.memberStatus } : m
-      ));
+      await loadMembers();
     }
   };
 
@@ -125,11 +123,10 @@ function Members() {
     ));
     try {
       await setMemberCareStatus(member.id, status);
+      await loadMembers();
     } catch (err) {
       console.error('Erro ao alterar cuidado:', err);
-      setMembers(prev => prev.map(m =>
-        m.id === member.id ? { ...m, careStatus: member.careStatus } : m
-      ));
+      await loadMembers();
     } finally {
       setCareLoading(null);
     }
