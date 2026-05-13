@@ -14,6 +14,7 @@ function People() {
   const [filterMonth, setFilterMonth] = useState('');
   const [filterDecision, setFilterDecision] = useState('');
   const [filterBaptized, setFilterBaptized] = useState('');
+  const [deleteId, setDeleteId] = useState(null);
   const [navigate] = [useNavigate()];
   const [becomeMemberId, setBecomeMemberId] = useState(null);
   const [becomeMemberLoading, setBecomeMemberLoading] = useState(false);
