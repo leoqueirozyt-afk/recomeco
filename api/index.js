@@ -77,8 +77,6 @@ app.use(async (req, res, next) => {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://recomeco-nu.vercel.app',
-  'https://recomeco-server.vercel.app',
   'https://recomeco-api.leoqueirozyt.workers.dev',
   env.FRONTEND_URL
 ].filter(Boolean);
@@ -90,8 +88,6 @@ app.use(cors({
     } else if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else if (origin.endsWith('.igrmontesiao.com.br')) {
-      callback(null, true);
-    } else if (origin.includes('.vercel.app')) {
       callback(null, true);
     } else {
       callback(new Error("Origem não permitida pelo CORS"));
@@ -529,23 +525,6 @@ app.post('/api/public/members', requireSupabase, async (req, res) => {
     });
   } catch (error) {
     console.error('Error in public member registration:', error.message);
-    res.status(500).json({ ok: false, error: error.message });
-  }
-});
-
-app.get('/api/supabase-test', async (req, res) => {
-  if (!dbConfigured) {
-    return res.status(503).json({ ok: false, error: 'Banco de dados não configurado' });
-  }
-  try {
-    const { data, error } = await supabase
-      .from('people')
-      .select('id')
-      .limit(1);
-    
-    if (error) throw error;
-    res.json({ ok: true, message: 'Banco de dados conectado com sucesso', data: data || [] });
-  } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
 });
