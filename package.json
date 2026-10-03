@@ -5,6 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "cd client && npm run dev",
+    "dev:api": "npx wrangler dev",
+    "build": "cd client && npm run build",
+    "deploy": "wrangler deploy",
     "install:all": "npm install && cd api && npm install && cd ../client && npm install"
+  },
+  "devDependencies": {
+    "wrangler": "^4.147.0"
   }
 }

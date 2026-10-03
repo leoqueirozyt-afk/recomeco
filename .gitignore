@@ -24,6 +24,7 @@ Thumbs.db
 
 # backups locais
 backups/
+backup_*.sql
 *.csv
 *.xlsx
 
@@ -33,3 +34,7 @@ supabase/
 # Server local (usar api/ para Vercel)
 server/
 .vercel
+
+# Cloudflare
+.wrangler/
+.dev.vars

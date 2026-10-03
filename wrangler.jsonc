@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "recomeco-api",
+  "main": "api/index.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "alias": {
+    "body-parser": "./api/compat/body-parser.js"
+  },
+  "assets": {
+    "directory": "./client/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "recomeco-db",
+      "database_id": "c9c93c15-8a98-4866-bb4b-336d9f79a642"
+    }
+  ]
+}

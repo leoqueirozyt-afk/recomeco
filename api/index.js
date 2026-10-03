@@ -2,13 +2,76 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { createClient } from '@supabase/supabase-js';
-import * as XLSX from 'xlsx';
+import { env } from 'cloudflare:workers';
+import { httpServerHandler } from 'cloudflare:node';
+import { createClient } from './db.js';
 
 const app = express();
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Body parsing próprio (substitui express.json/urlencoded).
+// No Workers a cadeia body-parser → raw-body → iconv-lite quebra: o wrangler
+// desabilita iconv-lite/lib/streams e extend-node, mas o gate
+// `process.versions.node` do nodejs_compat ainda os invoca.
+const BODY_LIMIT = 10 * 1024 * 1024;
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > BODY_LIMIT) {
+        const err = new Error('Payload too large');
+        err.status = 413;
+        reject(err);
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+app.use(async (req, res, next) => {
+  try {
+    if (['GET', 'HEAD', 'DELETE'].includes(req.method)) {
+      req.body = {};
+      next();
+      return;
+    }
+    const contentType = String(req.headers['content-type'] || '');
+    const raw = await readBody(req);
+    if (!raw.length) {
+      req.body = {};
+      next();
+      return;
+    }
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      req.body = Object.fromEntries(new URLSearchParams(raw.toString('utf8')));
+      next();
+      return;
+    }
+    const text = raw.toString('utf8');
+    if (contentType && !contentType.includes('application/json')) {
+      req.body = text;
+      next();
+      return;
+    }
+    try {
+      req.body = JSON.parse(text);
+    } catch (parseErr) {
+      const err = new Error('JSON inválido');
+      err.status = 400;
+      err.type = 'entity.parse.failed';
+      throw err;
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Config CORS
 const allowedOrigins = [
@@ -16,7 +79,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://recomeco-nu.vercel.app',
   'https://recomeco-server.vercel.app',
-  process.env.FRONTEND_URL
+  env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
@@ -35,23 +98,22 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Supabase config
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-
+// Database config (Cloudflare D1)
+// `supabase` mantém o nome original para não alterar as 60+ chamadas em index.js;
+// por trás é o cliente D1 de ./db.js.
 let supabase = null;
-let supabaseConfigured = false;
+let dbConfigured = false;
 
-if (supabaseUrl && supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-  supabaseConfigured = true;
-  console.log('Supabase configurado');
+if (env.DB) {
+  supabase = createClient(env.DB);
+  dbConfigured = true;
+  console.log('D1 configurado');
 } else {
-  console.error('SUPABASE_URL ou chave não configurada');
+  console.error('Binding D1 (DB) não configurado');
 }
 
-// Auth config - use Supabase JWT secret
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || 'recomeco-secret-key-2024';
+// Auth config
+const JWT_SECRET = env.JWT_SECRET || 'recomeco-secret-key-2024';
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -72,7 +134,7 @@ function authenticateToken(req, res, next) {
 
 // Auth routes
 app.get('/api/auth/health', (req, res) => {
-  res.json({ ok: true, message: 'Auth route funcionando', supabaseConfigured });
+  res.json({ ok: true, message: 'Auth route funcionando', dbConfigured });
 });
 
 app.get('/api/auth/user-check/:email', requireSupabase, async (req, res) => {
@@ -240,8 +302,8 @@ app.delete('/api/users/:id', requireSupabase, authenticateToken, async (req, res
 });
 
 function requireSupabase(req, res, next) {
-  if (!supabaseConfigured) {
-    return res.status(503).json({ error: 'Supabase não configurado' });
+  if (!dbConfigured) {
+    return res.status(503).json({ error: 'Banco de dados não configurado' });
   }
   next();
 }
@@ -469,8 +531,8 @@ app.post('/api/public/members', requireSupabase, async (req, res) => {
 });
 
 app.get('/api/supabase-test', async (req, res) => {
-  if (!supabaseConfigured) {
-    return res.status(503).json({ ok: false, error: 'Supabase não configurado' });
+  if (!dbConfigured) {
+    return res.status(503).json({ ok: false, error: 'Banco de dados não configurado' });
   }
   try {
     const { data, error } = await supabase
@@ -479,7 +541,7 @@ app.get('/api/supabase-test', async (req, res) => {
       .limit(1);
     
     if (error) throw error;
-    res.json({ ok: true, message: 'Supabase conectado com sucesso', data: data || [] });
+    res.json({ ok: true, message: 'Banco de dados conectado com sucesso', data: data || [] });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -1694,13 +1756,8 @@ app.patch('/api/members/:id/care-status', requireSupabase, authenticateToken, as
   }
 });
 
-// Export for Vercel
-export default app;
+// Workers entrypoint: Express integrado via httpServerHandler (cloudflare:node)
+const PORT = 3000;
+app.listen(PORT);
 
-// Development server
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-  });
-}
+export default httpServerHandler({ port: PORT });
