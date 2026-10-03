@@ -79,6 +79,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://recomeco-nu.vercel.app',
   'https://recomeco-server.vercel.app',
+  'https://recomeco-api.leoqueirozyt.workers.dev',
   env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -1754,6 +1755,12 @@ app.patch('/api/members/:id/care-status', requireSupabase, authenticateToken, as
     console.error('Error updating member care status:', error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Erros de middleware/rotas respondem JSON — a API nunca deve devolver HTML
+app.use((err, req, res, next) => {
+  console.error('Erro não tratado:', err.message);
+  res.status(err.status || 500).json({ ok: false, error: err.message || 'Erro interno' });
 });
 
 // Workers entrypoint: Express integrado via httpServerHandler (cloudflare:node)
