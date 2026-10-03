@@ -89,6 +89,8 @@ app.use(cors({
       callback(null, true);
     } else if (allowedOrigins.includes(origin)) {
       callback(null, true);
+    } else if (origin.endsWith('.igrmontesiao.com.br')) {
+      callback(null, true);
     } else if (origin.includes('.vercel.app')) {
       callback(null, true);
     } else {
